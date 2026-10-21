@@ -72,9 +72,17 @@ cd frontend && npm run typecheck
 | `LICHESS_CLIENT_ID` | 기본 `hansu` |
 | `CHESSCOM_CLIENT_ID` / `CHESSCOM_CLIENT_SECRET` | 체스닷컴 OAuth 승인 후 설정 |
 
-## 데이터 출처와 라이선스
+## 데이터 출처
 
 - 대국 데이터: [Chess.com Published-Data API](https://www.chess.com/news/view/published-data-api), [Lichess API](https://lichess.org/api)
 - 오프닝 이름: [lichess-org/chess-openings](https://github.com/lichess-org/chess-openings) (CC0) — `backend/app/data/openings/`
 - 착수음: [PyChess](https://github.com/pychess/pychess) (GPL-3.0-or-later), [Lichess](https://github.com/lichess-org/lila) SFX (AGPL-3.0-or-later) — 각 폴더의 `LICENSE.txt` 참고 (`frontend/public/sounds/`)
 - 기물 그림: [react-chessboard](https://github.com/Clariity/react-chessboard)에 포함된 기물 SVG
+
+## 라이선스
+
+Copyright (C) 2026 jinsub-kim-dev
+
+이 프로그램은 [GNU Affero General Public License v3.0](LICENSE) 이상(AGPL-3.0-or-later)으로 배포합니다. 수정한 버전을 배포하거나 네트워크 서비스로 제공할 때는 같은 라이선스로 소스 코드를 공개해야 합니다.
+
+함께 들어 있는 제3자 자료는 각자의 라이선스를 따릅니다: 착수음(GPL-3.0-or-later / AGPL-3.0-or-later, `frontend/public/sounds/*/LICENSE.txt`), 오프닝 목록(CC0, `backend/app/data/openings/SOURCE.txt`).
