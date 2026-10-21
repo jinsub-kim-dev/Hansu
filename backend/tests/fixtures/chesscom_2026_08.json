@@ -1,0 +1,124 @@
+{
+ "games": [
+  {
+   "url": "https://www.chess.com/game/live/1",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.08.01\"]\n[Round \"-\"]\n[White \"TestUser\"]\n[Black \"opp1\"]\n[Result \"1-0\"]\n[TimeControl \"180\"]\n[Termination \"test\"]\n\n1. e4 {[%clk 0:02:59]} 1... e5 {[%clk 0:02:58]} 2. Nf3 {[%clk 0:02:59]} 2... Nc6 {[%clk 0:02:58]} 3. Bb5 {[%clk 0:02:59]} 3... a6 {[%clk 0:02:58]} 1-0\n",
+   "time_control": "180",
+   "end_time": 1785542400,
+   "rated": true,
+   "uuid": "uuid-1",
+   "time_class": "blitz",
+   "rules": "chess",
+   "white": {
+    "rating": 1500,
+    "result": "win",
+    "@id": "https://api.chess.com/pub/player/testuser",
+    "username": "TestUser",
+    "uuid": "TestUser"
+   },
+   "black": {
+    "rating": 1500,
+    "result": "resigned",
+    "@id": "https://api.chess.com/pub/player/opp1",
+    "username": "opp1",
+    "uuid": "opp1"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/2",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.08.01\"]\n[Round \"-\"]\n[White \"TestUser\"]\n[Black \"opp2\"]\n[Result \"0-1\"]\n[TimeControl \"180\"]\n[Termination \"test\"]\n\n1. e4 {[%clk 0:02:59]} 1... c5 {[%clk 0:02:58]} 2. Nf3 {[%clk 0:02:59]} 2... d6 {[%clk 0:02:58]} 0-1\n",
+   "time_control": "180",
+   "end_time": 1785542400,
+   "rated": true,
+   "uuid": "uuid-2",
+   "time_class": "blitz",
+   "rules": "chess",
+   "white": {
+    "rating": 1500,
+    "result": "checkmated",
+    "@id": "https://api.chess.com/pub/player/testuser",
+    "username": "TestUser",
+    "uuid": "TestUser"
+   },
+   "black": {
+    "rating": 1500,
+    "result": "win",
+    "@id": "https://api.chess.com/pub/player/opp2",
+    "username": "opp2",
+    "uuid": "opp2"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/3",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.08.01\"]\n[Round \"-\"]\n[White \"opp3\"]\n[Black \"TestUser\"]\n[Result \"1/2-1/2\"]\n[TimeControl \"180\"]\n[Termination \"test\"]\n\n1. e4 {[%clk 0:02:59]} 1... e5 {[%clk 0:02:58]} 2. Nf3 {[%clk 0:02:59]} 2... Nf6 {[%clk 0:02:58]} 1/2-1/2\n",
+   "time_control": "180",
+   "end_time": 1785542400,
+   "rated": true,
+   "uuid": "uuid-3",
+   "time_class": "blitz",
+   "rules": "chess",
+   "white": {
+    "rating": 1500,
+    "result": "agreed",
+    "@id": "https://api.chess.com/pub/player/opp3",
+    "username": "opp3",
+    "uuid": "opp3"
+   },
+   "black": {
+    "rating": 1500,
+    "result": "agreed",
+    "@id": "https://api.chess.com/pub/player/testuser",
+    "username": "TestUser",
+    "uuid": "TestUser"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/4",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.08.01\"]\n[Round \"-\"]\n[White \"opp4\"]\n[Black \"TestUser\"]\n[Result \"1-0\"]\n[TimeControl \"180\"]\n[Termination \"test\"]\n\n1. d4 {[%clk 0:02:59]} 1... d5 {[%clk 0:02:58]} 2. c4 {[%clk 0:02:59]} 2... e6 {[%clk 0:02:58]} 1-0\n",
+   "time_control": "180",
+   "end_time": 1785542400,
+   "rated": true,
+   "uuid": "uuid-4",
+   "time_class": "rapid",
+   "rules": "chess",
+   "white": {
+    "rating": 1500,
+    "result": "win",
+    "@id": "https://api.chess.com/pub/player/opp4",
+    "username": "opp4",
+    "uuid": "opp4"
+   },
+   "black": {
+    "rating": 1500,
+    "result": "resigned",
+    "@id": "https://api.chess.com/pub/player/testuser",
+    "username": "TestUser",
+    "uuid": "TestUser"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/5",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.08.01\"]\n[Round \"-\"]\n[White \"TestUser\"]\n[Black \"opp5\"]\n[Result \"1-0\"]\n[TimeControl \"180\"]\n[Termination \"test\"]\n\n1. e4 {[%clk 0:02:59]} 1... e5 {[%clk 0:02:58]} 1-0\n",
+   "time_control": "180",
+   "end_time": 1785542400,
+   "rated": true,
+   "uuid": "uuid-5",
+   "time_class": "blitz",
+   "rules": "chess960",
+   "white": {
+    "rating": 1500,
+    "result": "win",
+    "@id": "https://api.chess.com/pub/player/testuser",
+    "username": "TestUser",
+    "uuid": "TestUser"
+   },
+   "black": {
+    "rating": 1500,
+    "result": "resigned",
+    "@id": "https://api.chess.com/pub/player/opp5",
+    "username": "opp5",
+    "uuid": "opp5"
+   }
+  }
+ ]
+}

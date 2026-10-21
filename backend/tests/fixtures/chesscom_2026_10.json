@@ -1,0 +1,52 @@
+{
+ "games": [
+  {
+   "url": "https://www.chess.com/game/live/6",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.08.01\"]\n[Round \"-\"]\n[White \"TestUser\"]\n[Black \"opp6\"]\n[Result \"1-0\"]\n[TimeControl \"180\"]\n[Termination \"test\"]\n\n1. d4 {[%clk 0:02:59]} 1... Nf6 {[%clk 0:02:58]} 2. c4 {[%clk 0:02:59]} 2... e6 {[%clk 0:02:58]} 3. Nf3 {[%clk 0:02:59]} 3... d5 {[%clk 0:02:58]} 1-0\n",
+   "time_control": "180",
+   "end_time": 1792540800,
+   "rated": true,
+   "uuid": "uuid-6",
+   "time_class": "blitz",
+   "rules": "chess",
+   "white": {
+    "rating": 1500,
+    "result": "win",
+    "@id": "https://api.chess.com/pub/player/testuser",
+    "username": "TestUser",
+    "uuid": "TestUser"
+   },
+   "black": {
+    "rating": 1500,
+    "result": "resigned",
+    "@id": "https://api.chess.com/pub/player/opp6",
+    "username": "opp6",
+    "uuid": "opp6"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/7",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.08.01\"]\n[Round \"-\"]\n[White \"opp7\"]\n[Black \"TestUser\"]\n[Result \"0-1\"]\n[TimeControl \"180\"]\n[Termination \"test\"]\n\n1. c4 {[%clk 0:02:59]} 1... e6 {[%clk 0:02:58]} 2. d4 {[%clk 0:02:59]} 2... d5 {[%clk 0:02:58]} 3. Nc3 {[%clk 0:02:59]} 0-1\n",
+   "time_control": "180",
+   "end_time": 1792540800,
+   "rated": true,
+   "uuid": "uuid-7",
+   "time_class": "rapid",
+   "rules": "chess",
+   "white": {
+    "rating": 1500,
+    "result": "checkmated",
+    "@id": "https://api.chess.com/pub/player/opp7",
+    "username": "opp7",
+    "uuid": "opp7"
+   },
+   "black": {
+    "rating": 1500,
+    "result": "win",
+    "@id": "https://api.chess.com/pub/player/testuser",
+    "username": "TestUser",
+    "uuid": "TestUser"
+   }
+  }
+ ]
+}

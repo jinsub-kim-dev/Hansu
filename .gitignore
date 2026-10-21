@@ -1,0 +1,40 @@
+# ---- 로컬 데이터와 비밀 값 (절대 올리지 않는다) ----
+# 대국 DB(수백 MB)와 세션 서명 키. 경로를 정확히 지정한다:
+# backend/app/data/openings/(오프닝 목록)는 저장소에 포함해야 하므로 "data/"처럼 넓게 쓰지 않는다.
+/backend/data/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite3
+.env
+.env.*
+!.env.example
+
+# ---- 개발 스크립트(dev.cmd) 로그와 PID ----
+/.dev/
+
+# ---- Python (backend) ----
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+
+# ---- Node (frontend) ----
+node_modules/
+dist/
+*.tsbuildinfo
+npm-debug.log*
+
+# ---- 편집기 / OS ----
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Claude Code 개인 설정 ----
+.claude/settings.local.json

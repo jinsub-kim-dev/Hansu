@@ -1,0 +1,5 @@
+Sound files from PyChess (https://github.com/pychess/pychess, sounds/),
+converted from Ogg Vorbis to MP3 (mono) and renamed:
+  mov2.ogg -> move.mp3, capture2.ogg -> capture.mp3, castle.ogg -> castle.mp3, check1.ogg -> check.mp3
+Copyright (c) 2006 Thomas Dybdahl Ahle and PyChess contributors.
+License: GPL-3.0-or-later (https://www.gnu.org/licenses/gpl-3.0.html)

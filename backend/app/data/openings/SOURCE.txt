@@ -1,0 +1,3 @@
+Opening names: https://github.com/lichess-org/chess-openings (a.tsv - e.tsv, columns: eco, name, pgn)
+License: CC0 1.0 Universal (public domain)
+To update: re-download the five .tsv files from the repository's master branch.
