@@ -18,6 +18,7 @@ import chess.engine
 from sqlalchemy import Engine
 from sqlmodel import Session, or_, select
 
+from app.i18n import AppError
 from app.models.db import EngineEval
 
 log = logging.getLogger(__name__)
@@ -124,7 +125,7 @@ class AnalysisService:
         self._factory = analyzer_factory
         self._analyzer: Analyzer | None = None
         self._pending: dict[str, _Request] = {}  # position_key → 요청 (들어온 순서)
-        self._errors: dict[str, tuple[float, str]] = {}  # key → (실패 시각, 메시지)
+        self._errors: dict[str, tuple[float, AppError]] = {}  # key → (실패 시각, 오류)
         self._cond = threading.Condition()
         self._stopped = False
         self._thread: threading.Thread | None = None
@@ -169,7 +170,7 @@ class AnalysisService:
             req.ucis.update(ucis)
             self._cond.notify()
 
-    def error(self, key: str) -> str | None:
+    def error(self, key: str) -> AppError | None:
         """최근에 실패한 분석의 오류 메시지. 재시도 대기 시간이 지나면 None."""
         failed = self._errors.get(key)
         if failed is None or time.monotonic() - failed[0] > RETRY_AFTER_ERROR_S:
@@ -202,7 +203,7 @@ class AnalysisService:
             self._errors.pop(key, None)
         except Exception as exc:
             log.exception("엔진 분석 실패: %s", key)
-            self._errors[key] = (time.monotonic(), f"엔진 분석에 실패했습니다: {exc}")
+            self._errors[key] = (time.monotonic(), AppError("engine_failed", detail=str(exc)))
 
     def _process(self, key: str, req: _Request) -> None:
         if self._analyzer is None:

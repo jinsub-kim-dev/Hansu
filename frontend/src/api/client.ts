@@ -1,14 +1,16 @@
 // 백엔드 API 클라이언트. 외부 플랫폼 API는 직접 호출하지 않는다.
+import { getLang, translate } from '../i18n'
 
 export type Platform = 'chesscom' | 'lichess'
 
-export const PLATFORMS: { value: Platform; label: string; short: string }[] = [
-  { value: 'chesscom', label: '체스닷컴', short: 'C' },
-  { value: 'lichess', label: '리체스', short: 'L' },
+export const PLATFORMS: { value: Platform; short: string }[] = [
+  { value: 'chesscom', short: 'C' },
+  { value: 'lichess', short: 'L' },
 ]
 
+/** 플랫폼 이름(현재 언어) */
 export function platformLabel(p: Platform): string {
-  return PLATFORMS.find((x) => x.value === p)?.label ?? p
+  return translate(`platform.${p}`)
 }
 export type Color = 'white' | 'black'
 
@@ -83,9 +85,12 @@ export interface PositionMoveStats {
 export class ApiError extends Error {}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const resp = await fetch(`/api${path}`, init)
+  // 백엔드가 오류 문구를 현재 언어로 만들도록 언어를 함께 보낸다.
+  const headers = new Headers(init?.headers)
+  headers.set('Accept-Language', getLang())
+  const resp = await fetch(`/api${path}`, { ...init, headers })
   if (!resp.ok) {
-    let message = `요청 실패 (${resp.status})`
+    let message = translate('error.requestFailed', { status: resp.status })
     try {
       const body = await resp.json()
       if (typeof body.detail === 'string') message = body.detail

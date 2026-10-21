@@ -1,11 +1,12 @@
 from typing import Annotated
 
 import chess
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, Query, Request
 from sqlmodel import Session
 
 from app.analysis.engine import AnalysisService, classify
-from app.analysis.positions import PositionError, board_from_input, position_key
+from app.analysis.positions import board_from_input, position_key
+from app.i18n import AppError, Lang, get_lang, translate
 from app.db import get_session
 from app.models.schemas import CandidateLineOut, EngineLineOut, MoveEvalOut, PositionEvalOut
 
@@ -39,33 +40,31 @@ def get_position_eval(
     moves: Annotated[list[str] | None, Query(description="평가할 수(UCI). 여러 번 줄 수 있다.")] = None,
     service: AnalysisService = Depends(get_analysis_service),
     session: Session = Depends(get_session),
+    lang: Lang = Depends(get_lang),
 ):
     """포지션의 엔진 평가(최선 수)와 주어진 수들의 평가.
 
     결과가 캐시에 없으면 분석을 예약하고 status=pending을 돌려준다. 클라이언트는 done이 될 때까지 폴링한다.
     """
-    try:
-        board = board_from_input(fen=fen, pgn=pgn)
-    except PositionError as exc:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
+    board = board_from_input(fen=fen, pgn=pgn)  # 잘못된 입력이면 PositionError(422)
     ucis = list(dict.fromkeys(moves or []))
     if len(ucis) > MAX_MOVES:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, f"수는 최대 {MAX_MOVES}개까지")
+        raise AppError("too_many_moves", max=MAX_MOVES)
     for uci in ucis:
         try:
             ok = chess.Move.from_uci(uci) in board.legal_moves
         except ValueError:
             ok = False
         if not ok:
-            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, f"둘 수 없는 수입니다: {uci}")
+            raise AppError("illegal_move", uci=uci)
 
     if not service.available:
         return PositionEvalOut(
             status="unavailable",
-            message="Stockfish를 찾을 수 없습니다. STOCKFISH_PATH 환경 변수를 설정하세요.",
+            message=translate("engine_unavailable", lang),
         )
     if board.is_game_over():
-        return PositionEvalOut(status="done", message="대국이 끝난 포지션입니다.")
+        return PositionEvalOut(status="done", message=translate("game_over_position", lang))
 
     key = position_key(board)
     pos_row, move_rows, line_rows = service.cached(session, key, ucis)
@@ -127,7 +126,7 @@ def get_position_eval(
     if complete:
         state, message = "done", None
     elif (err := service.error(key)) is not None:
-        state, message = "failed", err
+        state, message = "failed", err.message(lang)
     else:
         state, message = "pending", None
     return PositionEvalOut(

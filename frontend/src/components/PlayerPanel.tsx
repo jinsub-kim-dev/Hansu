@@ -22,6 +22,7 @@ import {
   type PlayerSummary,
   type SavedPlayer,
 } from '../api/client'
+import { useI18n, type MessageKey } from '../i18n'
 
 const POLL_MS = 1000
 
@@ -29,11 +30,17 @@ interface Props {
   current: PlayerSummary | null
   onSelect: (summary: PlayerSummary) => void
   initialJobId: string | null // OAuth로 돌아온 직후 시작된 가져오기 작업
-  authError: string | null
+  authError: string | null // 로그인 실패 코드(백엔드가 ?auth_error=로 넘김)
 }
 
-function formatDate(iso: string | null): string {
-  return iso ? new Date(iso).toLocaleDateString('ko-KR') : '-'
+/** 로그인 실패 코드 → 현재 언어 문장 */
+function authErrorKey(code: string): MessageKey {
+  const key = `authError.${code}`
+  const known: string[] = [
+    'login_cancelled', 'login_error', 'login_expired', 'login_verify_failed',
+    'account_info_failed', 'account_conflict', 'provider_not_ready',
+  ]
+  return (known.includes(code) ? key : 'authError.unknown') as MessageKey
 }
 
 function Badge({ platform }: { platform: Platform }) {
@@ -50,7 +57,9 @@ export function PlayerPanel({ current, onSelect, initialJobId, authError }: Prop
   const [saved, setSaved] = useState<SavedPlayer[]>([])
   const [historyYears, setHistoryYears] = useState(3)
   const [job, setJob] = useState<ImportJob | null>(null)
-  const [error, setError] = useState<string | null>(authError)
+  const { t, formatDate, formatNumber } = useI18n()
+  const [authCode, setAuthCode] = useState<string | null>(authError)
+  const [error, setError] = useState<string | null>(null)
   const [fallbackName, setFallbackName] = useState('')
   const timer = useRef<number | undefined>(undefined)
 
@@ -75,6 +84,7 @@ export function PlayerPanel({ current, onSelect, initialJobId, authError }: Prop
 
   async function select(platform: Platform, name: string) {
     setError(null)
+    setAuthCode(null)
     try {
       onSelect(await getPlayer(platform, name))
     } catch (e) {
@@ -103,6 +113,7 @@ export function PlayerPanel({ current, onSelect, initialJobId, authError }: Prop
   async function runImport(platform: Platform, name: string) {
     if (!name || busy) return
     setError(null)
+    setAuthCode(null)
     try {
       const j = await startImport(platform, name)
       setJob(j)
@@ -118,7 +129,7 @@ export function PlayerPanel({ current, onSelect, initialJobId, authError }: Prop
   }
 
   async function onUnlink(platform: Platform) {
-    if (!window.confirm(`${platformLabel(platform)} 계정 연결을 끊을까요? 가져온 대국 데이터는 남습니다.`)) return
+    if (!window.confirm(t('account.unlinkConfirm', { platform: platformLabel(platform) }))) return
     await unlinkAccount(platform)
     refresh()
   }
@@ -134,16 +145,17 @@ export function PlayerPanel({ current, onSelect, initialJobId, authError }: Prop
   return (
     <section className="panel player-panel sec-blue">
       <div className="panel-head">
-        <h2>내 계정</h2>
+        <h2>{t('account.title')}</h2>
         {me?.user_id != null && (
           <button className="link-btn" onClick={onLogout}>
-            로그아웃
+            {t('account.logout')}
           </button>
         )}
       </div>
 
       <ul className="accounts">
-        {PLATFORMS.map(({ value: platform, label }) => {
+        {PLATFORMS.map(({ value: platform }) => {
+          const label = platformLabel(platform)
           const account = me?.accounts.find((a) => a.platform === platform)
           const provider = providers.find((x) => x.platform === platform)
           if (account) {
@@ -158,8 +170,8 @@ export function PlayerPanel({ current, onSelect, initialJobId, authError }: Prop
                   </span>
                   <span className="muted small">
                     {hasGames
-                      ? `${s!.total_games.toLocaleString()}국 · 마지막 대국 ${formatDate(s!.last_game_at)}`
-                      : '아직 가져온 대국이 없어요'}
+                      ? `${t('common.games', { n: formatNumber(s!.total_games), count: s!.total_games })} · ${t('common.lastGame', { date: formatDate(s!.last_game_at) })}`
+                      : t('account.noGames')}
                   </span>
                 </button>
                 <div className="account-actions">
@@ -167,12 +179,12 @@ export function PlayerPanel({ current, onSelect, initialJobId, authError }: Prop
                     className="secondary"
                     onClick={() => runImport(platform, account.username)}
                     disabled={busy}
-                    title={hasGames ? '마지막 대국 이후 새 대국을 받습니다' : `최근 ${historyYears}년치 대국을 받습니다`}
+                    title={hasGames ? t('account.updateTitle') : t('account.importTitle', { years: historyYears })}
                   >
-                    {hasGames ? '↻ 업데이트' : '가져오기'}
+                    {hasGames ? t('account.update') : t('account.import')}
                   </button>
                   <button className="link-btn" onClick={() => onUnlink(platform)}>
-                    연결 해제
+                    {t('account.unlink')}
                   </button>
                 </div>
               </li>
@@ -186,12 +198,10 @@ export function PlayerPanel({ current, onSelect, initialJobId, authError }: Prop
                 disabled={!provider?.enabled || busy}
               >
                 <Badge platform={platform} />
-                {label} 계정 연결
+                {t('account.connect', { platform: label })}
               </button>
               {provider && !provider.enabled && (
-                <p className="muted small">
-                  OAuth 승인 대기 중이에요. 그동안은 아이디로 대국을 가져올 수 있어요.
-                </p>
+                <p className="muted small">{t('account.pending')}</p>
               )}
               {provider && !provider.enabled && (
                 <form
@@ -204,12 +214,12 @@ export function PlayerPanel({ current, onSelect, initialJobId, authError }: Prop
                   <input
                     value={fallbackName}
                     onChange={(e) => setFallbackName(e.target.value)}
-                    placeholder={`${label} 아이디`}
-                    aria-label={`${label} 아이디`}
+                    placeholder={t('account.usernamePlaceholder', { platform: label })}
+                    aria-label={t('account.usernamePlaceholder', { platform: label })}
                     disabled={busy}
                   />
                   <button type="submit" className="secondary" disabled={busy || !fallbackName.trim()}>
-                    가져오기
+                    {t('account.import')}
                   </button>
                 </form>
               )}
@@ -218,9 +228,7 @@ export function PlayerPanel({ current, onSelect, initialJobId, authError }: Prop
         })}
       </ul>
       {me?.user_id == null && (
-        <p className="muted small import-hint">
-          계정을 연결하면 내 대국을 자동으로 가져옵니다. 처음에는 최근 {historyYears}년치, 이후에는 새 대국만 받아요.
-        </p>
+        <p className="muted small import-hint">{t('account.hint', { years: historyYears })}</p>
       )}
 
       {p && busy && job && <ImportProgressView job={job} progress={p} historyYears={historyYears} />}
@@ -228,17 +236,18 @@ export function PlayerPanel({ current, onSelect, initialJobId, authError }: Prop
         <p className="muted small import-hint">
           {platformLabel(job.platform)} {job.username}:{' '}
           {p.mode === 'initial'
-            ? `최근 ${historyYears}년 대국 ${p.games_added.toLocaleString()}개를 가져왔어요.`
+            ? t('account.doneInitial', { years: historyYears, n: formatNumber(p.games_added), count: p.games_added })
             : p.games_added > 0
-              ? `새 대국 ${p.games_added.toLocaleString()}개를 추가했어요.`
-              : '새 대국이 없어요. 이미 최신이에요.'}
+              ? t('account.doneAdded', { n: formatNumber(p.games_added), count: p.games_added })
+              : t('account.doneNone')}
         </p>
       )}
+      {authCode && <p className="error">{t(authErrorKey(authCode))}</p>}
       {error && <p className="error">{error}</p>}
 
       {others.length > 0 && (
         <details className="others">
-          <summary>다른 플레이어 ({others.length})</summary>
+          <summary>{t('account.others', { n: others.length })}</summary>
           <ul className="saved-players">
             {others.map((s) => (
               <li key={`${s.platform}/${s.username}`} className={isCurrent(s.platform, s.username) ? 'active' : ''}>
@@ -248,15 +257,16 @@ export function PlayerPanel({ current, onSelect, initialJobId, authError }: Prop
                     {s.display_name ?? s.username}
                   </span>
                   <span className="muted small">
-                    {s.total_games.toLocaleString()}국 · 마지막 대국 {formatDate(s.last_game_at)}
+                    {t('common.games', { n: formatNumber(s.total_games), count: s.total_games })} ·{' '}
+                    {t('common.lastGame', { date: formatDate(s.last_game_at) })}
                   </span>
                 </button>
                 <button
                   className="secondary refresh"
                   onClick={() => runImport(s.platform, s.username)}
                   disabled={busy}
-                  title="새 대국 업데이트"
-                  aria-label={`${s.username} 새 대국 업데이트`}
+                  title={t('account.refresh')}
+                  aria-label={t('account.refreshLabel', { name: s.username })}
                 >
                   ↻
                 </button>
@@ -278,18 +288,21 @@ function ImportProgressView({
   progress: ImportProgress
   historyYears: number
 }) {
+  const { t, formatDate, formatNumber } = useI18n()
   const title =
     p.mode === 'initial'
-      ? `${job.username} · 최근 ${historyYears}년 대국 가져오는 중`
-      : `${job.username} · ${formatDate(p.since)} 이후 새 대국 확인 중`
+      ? t('import.initial', { name: job.username, years: historyYears })
+      : t('import.update', { name: job.username, date: formatDate(p.since) })
   const byMonth = p.archives_total > 0
   return (
     <div className="import-progress">
       <div className="small">{title}</div>
       {byMonth ? <progress value={p.archives_done} max={p.archives_total} /> : <progress />}
       <div className="muted small">
-        {byMonth ? `${p.archives_done}/${p.archives_total}개월` : `${p.games_seen.toLocaleString()}국 확인`} · 새 대국{' '}
-        {p.games_added.toLocaleString()}개
+        {byMonth
+          ? t('import.months', { done: p.archives_done, total: p.archives_total })
+          : t('import.seen', { n: formatNumber(p.games_seen), count: p.games_seen })}{' '}
+        · {t('import.added', { n: formatNumber(p.games_added) })}
       </div>
     </div>
   )

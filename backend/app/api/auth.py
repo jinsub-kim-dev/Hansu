@@ -8,7 +8,7 @@ OAuth 콜백은 PUBLIC_BASE_URL(프론트엔드 주소) 아래 /api/auth/{platfo
 import secrets
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, status
 from fastapi.responses import RedirectResponse
 from sqlmodel import Session, select
 
@@ -16,6 +16,7 @@ from app.api.players import get_job_manager
 from app.auth.accounts import AccountConflict, link_account, user_accounts
 from app.auth.providers import OAuthError, OAuthProvider, new_pkce
 from app.config import settings
+from app.i18n import AppError, Lang, get_lang, platform_name
 from app.db import get_session
 from app.importers.jobs import ImportJobManager
 from app.models.db import LinkedAccount, User
@@ -37,8 +38,13 @@ def _back_to_app(**query: str) -> RedirectResponse:
 
 
 @router.get("/auth/providers", response_model=list[AuthProviderOut])
-def list_providers(providers: dict[str, OAuthProvider] = Depends(get_providers)):
-    return [AuthProviderOut(platform=p.platform, label=p.label, enabled=p.enabled) for p in providers.values()]
+def list_providers(
+    providers: dict[str, OAuthProvider] = Depends(get_providers), lang: Lang = Depends(get_lang)
+):
+    return [
+        AuthProviderOut(platform=p.platform, label=platform_name(p.platform, lang), enabled=p.enabled)
+        for p in providers.values()
+    ]
 
 
 @router.get("/auth/{platform}/login")
@@ -46,7 +52,7 @@ def login(platform: Platform, request: Request, providers: dict[str, OAuthProvid
     """플랫폼 로그인 화면으로 보낸다."""
     provider = providers[platform]
     if not provider.enabled:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, f"{provider.label} 계정 연결은 아직 준비 중입니다.")
+        raise AppError("provider_not_ready", status_code=400, platform=platform)
     verifier, challenge = new_pkce()
     state = secrets.token_urlsafe(24)
     request.session["oauth"] = {"platform": platform, "state": state, "verifier": verifier}
@@ -68,14 +74,14 @@ def callback(
     """플랫폼에서 돌아오면 본인 확인 → 계정 연결 → 대국 가져오기 시작 → 앱으로 돌려보낸다."""
     pending = request.session.pop("oauth", None)
     if error:
-        return _back_to_app(auth_error="로그인을 취소했습니다." if error == "access_denied" else f"로그인 오류: {error}")
+        return _back_to_app(auth_error="login_cancelled" if error == "access_denied" else "login_error")
     if not pending or pending.get("platform") != platform or pending.get("state") != state or not code:
-        return _back_to_app(auth_error="로그인 요청이 만료됐습니다. 다시 시도하세요.")
+        return _back_to_app(auth_error="login_expired")
     try:
         ident = providers[platform].identify(code, pending["verifier"], _redirect_uri(platform))
         user_id = link_account(session, request.session.get("user_id"), platform, ident)
     except (OAuthError, AccountConflict) as exc:
-        return _back_to_app(auth_error=str(exc))
+        return _back_to_app(auth_error=exc.code)
     request.session["user_id"] = user_id
 
     # 연결하자마자 대국을 가져온다(처음이면 최근 N년, 이미 있으면 업데이트).
@@ -105,7 +111,7 @@ def unlink(platform: Platform, request: Request, session: Session = Depends(get_
     """계정 연결만 끊는다. 이미 가져온 대국 데이터는 남는다."""
     user_id = request.session.get("user_id")
     if user_id is None:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "로그인이 필요합니다.")
+        raise AppError("login_required", status_code=401)
     for acc in session.exec(
         select(LinkedAccount).where(LinkedAccount.user_id == user_id, LinkedAccount.platform == platform)
     ).all():

@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { getSoundSet, playMoveSound, preloadSounds, setSoundSet, SOUND_SETS, type SoundSet } from './lib/sound'
+import { LANGS, useI18n, type Lang } from './i18n'
 import { ExplorerPage } from './pages/ExplorerPage'
 
 export function App() {
+  const { t, lang, setLang } = useI18n()
   const [soundSet, setSoundSetState] = useState(getSoundSet)
 
   function changeSound(set: SoundSet) {
@@ -19,19 +21,31 @@ export function App() {
           <span className="brand-mark" aria-hidden>
             ♞
           </span>
-          한수
+          {t('app.name')}
         </h1>
-        <span className="muted">체스 복기 · 포지션별 수순 통계</span>
-        <label className="sound-select">
-          착수음
-          <select value={soundSet} onChange={(e) => changeSound(e.target.value as SoundSet)}>
-            {SOUND_SETS.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <span className="muted">{t('app.subtitle')}</span>
+        <div className="header-controls">
+          <label className="sound-select">
+            {t('app.sound')}
+            <select value={soundSet} onChange={(e) => changeSound(e.target.value as SoundSet)}>
+              {SOUND_SETS.map((s) => (
+                <option key={s} value={s}>
+                  {t(`sound.${s}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="sound-select">
+            {t('app.language')}
+            <select value={lang} onChange={(e) => setLang(e.target.value as Lang)}>
+              {LANGS.map((l) => (
+                <option key={l.value} value={l.value}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </header>
       <main onPointerDown={preloadSounds}>
         <ExplorerPage />

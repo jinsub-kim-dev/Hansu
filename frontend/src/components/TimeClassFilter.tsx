@@ -1,15 +1,11 @@
 // 시간 규칙 필터. 여러 개를 함께 고를 수 있고, 아무것도 고르지 않으면 전체.
+import { translate, useI18n } from '../i18n'
 
-const TIME_CLASSES: { value: string; label: string }[] = [
-  { value: 'bullet', label: '불렛' },
-  { value: 'blitz', label: '블리츠' },
-  { value: 'rapid', label: '래피드' },
-  { value: 'classical', label: '클래시컬' },
-  { value: 'daily', label: '일일 체스' },
-]
+const TIME_CLASSES = ['bullet', 'blitz', 'rapid', 'classical', 'daily'] as const
 
+/** 시간 규칙 이름(현재 언어). 모르는 값은 그대로. */
 export function timeClassLabel(value: string): string {
-  return TIME_CLASSES.find((t) => t.value === value)?.label ?? value
+  return (TIME_CLASSES as readonly string[]).includes(value) ? translate(`tc.${value as (typeof TIME_CLASSES)[number]}`) : value
 }
 
 interface Props {
@@ -20,9 +16,10 @@ interface Props {
 
 export function TimeClassFilter({ counts, selected, onChange }: Props) {
   // 대국이 없는 클래시컬(체스닷컴에는 없음)은 숨기고, 모르는 시간 규칙은 뒤에 붙인다.
-  const known = new Set(TIME_CLASSES.map((t) => t.value))
+  const { t, formatNumber } = useI18n()
+  const known = new Set<string>(TIME_CLASSES)
   const options = [
-    ...TIME_CLASSES.filter((t) => t.value !== 'classical' || counts.classical),
+    ...TIME_CLASSES.filter((v) => v !== 'classical' || counts.classical).map((v) => ({ value: v as string, label: timeClassLabel(v) })),
     ...Object.keys(counts)
       .filter((tc) => !known.has(tc))
       .map((tc) => ({ value: tc, label: tc })),
@@ -33,13 +30,13 @@ export function TimeClassFilter({ counts, selected, onChange }: Props) {
   }
 
   return (
-    <div className="chips" role="group" aria-label="시간 규칙">
+    <div className="chips" role="group" aria-label={t('stats.timeClass')}>
       <button
         className={selected.length === 0 ? 'chip active' : 'chip'}
         aria-pressed={selected.length === 0}
         onClick={() => onChange([])}
       >
-        전체
+        {t('tc.all')}
       </button>
       {options.map(({ value, label }) => {
         const n = counts[value] ?? 0
@@ -54,7 +51,7 @@ export function TimeClassFilter({ counts, selected, onChange }: Props) {
           >
             <span className={`tc-dot tc-${value}`} />
             {label}
-            <span className="count">{n.toLocaleString()}</span>
+            <span className="count">{formatNumber(n)}</span>
           </button>
         )
       })}

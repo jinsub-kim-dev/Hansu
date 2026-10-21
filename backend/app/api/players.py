@@ -1,9 +1,9 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response, status
 from sqlmodel import Session
 
 from app.analysis.stats import list_players, player_summary
 from app.db import get_session
-from app.importers.base import ImporterError
+from app.i18n import AppError, Lang, get_lang
 from app.importers import chesscom, lichess
 from app.importers.jobs import ImportJob, ImportJobManager
 from app.config import settings
@@ -22,18 +22,24 @@ def get_job_manager(request: Request) -> ImportJobManager:
     return request.app.state.job_manager
 
 
-def _job_out(job: ImportJob) -> ImportJobOut:
-    return ImportJobOut.model_validate(job, from_attributes=True)
+def _job_out(job: ImportJob, lang: Lang) -> ImportJobOut:
+    return ImportJobOut(
+        id=job.id,
+        platform=job.platform,
+        username=job.username,
+        status=job.status,
+        progress=job.progress.__dict__,
+        error=job.error.message(lang) if job.error else None,
+        created_at=job.created_at,
+        finished_at=job.finished_at,
+    )
 
 
 VALIDATORS = {"chesscom": chesscom.validate_username, "lichess": lichess.validate_username}
 
 
 def _check_username(platform: Platform, username: str) -> str:
-    try:
-        return VALIDATORS[platform](username)
-    except ImporterError as exc:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
+    return VALIDATORS[platform](username)  # 형식이 틀리면 AppError(422)
 
 
 @router.post(
@@ -47,6 +53,7 @@ def start_import(
     background: BackgroundTasks,
     response: Response,
     jobs: ImportJobManager = Depends(get_job_manager),
+    lang: Lang = Depends(get_lang),
 ):
     """플레이어의 대국을 백그라운드에서 가져온다. 진행 상황은 /import-jobs/{id}로 조회한다."""
     username = _check_username(platform, username)
@@ -55,15 +62,17 @@ def start_import(
         background.add_task(jobs.run, job.id)
     else:
         response.status_code = status.HTTP_200_OK
-    return _job_out(job)
+    return _job_out(job, lang)
 
 
 @router.get("/import-jobs/{job_id}", response_model=ImportJobOut)
-def get_import_job(job_id: str, jobs: ImportJobManager = Depends(get_job_manager)):
+def get_import_job(
+    job_id: str, jobs: ImportJobManager = Depends(get_job_manager), lang: Lang = Depends(get_lang)
+):
     job = jobs.get(job_id)
     if job is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "작업을 찾을 수 없습니다.")
-    return _job_out(job)
+        raise AppError("job_not_found", status_code=404)
+    return _job_out(job, lang)
 
 
 @router.get("/import-settings", response_model=ImportSettingsOut)
@@ -83,5 +92,5 @@ def get_player(platform: Platform, username: str, session: Session = Depends(get
     username = _check_username(platform, username)
     summary = player_summary(session, platform, username)
     if not summary["saved"]:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "아직 가져오지 않은 플레이어입니다.")
+        raise AppError("player_not_imported", status_code=404)
     return summary

@@ -1,12 +1,13 @@
 // 통계에 넣을 대국의 기간. 전체 기간 또는 시작일~종료일(현지 날짜, 양 끝 포함).
+import { translate, useI18n, type MessageKey } from '../i18n'
 
 export type Period = { mode: 'all' } | { mode: 'range'; from: string; to: string } // YYYY-MM-DD
 
-const PRESETS: { label: string; months: number }[] = [
-  { label: '1개월', months: 1 },
-  { label: '3개월', months: 3 },
-  { label: '1년', months: 12 },
-  { label: '3년', months: 36 },
+const PRESETS: { label: MessageKey; months: number }[] = [
+  { label: 'period.last1m', months: 1 },
+  { label: 'period.last3m', months: 3 },
+  { label: 'period.last1y', months: 12 },
+  { label: 'period.last3y', months: 36 },
 ]
 
 function toDateInput(d: Date): string {
@@ -29,7 +30,7 @@ function matchingPreset(p: Period) {
 export function periodLabel(p: Period): string | null {
   if (p.mode === 'all') return null
   const preset = matchingPreset(p)
-  return preset ? `최근 ${preset.label}` : `${p.from.replaceAll('-', '.')} ~ ${p.to.replaceAll('-', '.')}`
+  return preset ? translate(preset.label) : `${p.from.replaceAll('-', '.')} ~ ${p.to.replaceAll('-', '.')}`
 }
 
 /** 기간을 API의 since/until(ISO 시각, until은 미포함)로 바꾼다. 종료일은 그날 끝까지 포함한다. */
@@ -48,6 +49,7 @@ interface Props {
 }
 
 export function PeriodFilter({ value, onChange, firstGameAt }: Props) {
+  const { t } = useI18n()
   const today = toDateInput(new Date())
   const min = firstGameAt ? toDateInput(new Date(firstGameAt)) : undefined
   const active = matchingPreset(value)
@@ -64,7 +66,7 @@ export function PeriodFilter({ value, onChange, firstGameAt }: Props) {
           aria-pressed={value.mode === 'all'}
           onClick={() => onChange({ mode: 'all' })}
         >
-          전체 기간
+          {t('period.all')}
         </button>
         {PRESETS.map((p) => (
           <button
@@ -73,14 +75,14 @@ export function PeriodFilter({ value, onChange, firstGameAt }: Props) {
             aria-pressed={active?.months === p.months}
             onClick={() => preset(p.months)}
           >
-            최근 {p.label}
+            {t(p.label)}
           </button>
         ))}
       </div>
       <div className="period-dates">
         <input
           type="date"
-          aria-label="시작일"
+          aria-label={t('period.from')}
           value={value.mode === 'range' ? value.from : ''}
           min={min}
           max={value.mode === 'range' ? value.to : today}
@@ -91,7 +93,7 @@ export function PeriodFilter({ value, onChange, firstGameAt }: Props) {
         <span className="muted">~</span>
         <input
           type="date"
-          aria-label="종료일"
+          aria-label={t('period.to')}
           value={value.mode === 'range' ? value.to : ''}
           min={value.mode === 'range' ? value.from : min}
           max={today}

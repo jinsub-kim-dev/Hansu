@@ -13,10 +13,10 @@ from urllib.parse import urlencode
 
 import httpx
 
-from app.importers.base import ImporterError
+from app.i18n import AppError
 
 
-class OAuthError(ImporterError):
+class OAuthError(AppError):
     """사용자에게 보여줄 수 있는 로그인 오류."""
 
 
@@ -81,13 +81,13 @@ class LichessOAuth:
             },
         )
         if resp.status_code != 200:
-            raise OAuthError("리체스 로그인 확인에 실패했습니다. 다시 시도하세요.")
+            raise OAuthError("login_verify_failed", platform=self.platform)
         token = resp.json()["access_token"]
         auth = {"Authorization": f"Bearer {token}"}
         try:
             account = self.http.get(f"{self.BASE}/api/account", headers=auth)
             if account.status_code != 200:
-                raise OAuthError("리체스 계정 정보를 받지 못했습니다.")
+                raise OAuthError("account_info_failed", platform=self.platform)
             data = account.json()
         finally:
             # 아이디만 확인하면 되므로 토큰은 바로 폐기한다.
@@ -117,7 +117,7 @@ class ChessComOAuth:
         return False  # TODO: 승인 후 엔드포인트와 토큰 검증을 구현하고 켠다.
 
     def authorize_url(self, state: str, challenge: str, redirect_uri: str) -> str:
-        raise OAuthError("체스닷컴 계정 연결은 아직 준비 중입니다.")
+        raise OAuthError("provider_not_ready", platform=self.platform)
 
     def identify(self, code: str, verifier: str, redirect_uri: str) -> Identity:
-        raise OAuthError("체스닷컴 계정 연결은 아직 준비 중입니다.")
+        raise OAuthError("provider_not_ready", platform=self.platform)

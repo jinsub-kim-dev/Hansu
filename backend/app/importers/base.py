@@ -8,17 +8,18 @@ from datetime import UTC, datetime
 from sqlmodel import Session, func, or_, select
 
 from app.analysis.positions import extract_moves
+from app.i18n import AppError
 from app.models.db import Game, Player, PositionMove
 
 log = logging.getLogger(__name__)
 
 
-class ImporterError(Exception):
+class ImporterError(AppError):
     """사용자에게 보여줄 수 있는 수집 오류."""
 
 
 class PlayerNotFound(ImporterError):
-    pass
+    status_code = 404
 
 
 @dataclass

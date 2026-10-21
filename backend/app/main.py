@@ -1,7 +1,8 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 import httpx
@@ -12,6 +13,7 @@ from app.api import analysis, auth, openings, players, stats
 from app.auth.providers import ChessComOAuth, LichessOAuth, OAuthProvider
 from app.config import settings
 from app.db import engine, init_db
+from app.i18n import AppError, get_lang
 from app.importers import chesscom, lichess
 from app.importers.jobs import ImportJobManager
 
@@ -96,6 +98,13 @@ def create_app(
         same_site="lax",
         https_only=settings.public_base_url.startswith("https://"),
     )
+    @app.exception_handler(AppError)
+    async def app_error_handler(request: Request, exc: AppError):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.message(get_lang(request)), "code": exc.code},
+        )
+
     app.include_router(players.router, prefix="/api")
     app.include_router(auth.router, prefix="/api")
     app.include_router(stats.router, prefix="/api")

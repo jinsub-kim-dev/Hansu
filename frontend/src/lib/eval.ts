@@ -1,4 +1,5 @@
 import type { Classification } from '../api/client'
+import { translate } from '../i18n'
 
 /** centipawn → [-1, 1] 기대 승률 (백엔드 classify와 같은 식). */
 export function winChance(cp: number): number {
@@ -12,12 +13,17 @@ export function formatEval(cp: number, mate: number | null): string {
   return `${v > 0 ? '+' : ''}${v.toFixed(2)}`
 }
 
-export const CLASSIFICATION: Record<Classification, { label: string; symbol: string; className: string }> = {
-  best: { label: '최선', symbol: '★', className: 'cls-best' },
-  good: { label: '좋음', symbol: '✓', className: 'cls-good' },
-  inaccuracy: { label: '부정확', symbol: '?!', className: 'cls-inaccuracy' },
-  mistake: { label: '실수', symbol: '?', className: 'cls-mistake' },
-  blunder: { label: '블런더', symbol: '??', className: 'cls-blunder' },
+export const CLASSIFICATION: Record<Classification, { symbol: string; className: string }> = {
+  best: { symbol: '★', className: 'cls-best' },
+  good: { symbol: '✓', className: 'cls-good' },
+  inaccuracy: { symbol: '?!', className: 'cls-inaccuracy' },
+  mistake: { symbol: '?', className: 'cls-mistake' },
+  blunder: { symbol: '??', className: 'cls-blunder' },
+}
+
+/** 판정 이름(현재 언어) */
+export function classificationLabel(c: Classification): string {
+  return translate(`cls.${c}`)
 }
 
 // 보드 화살표와 표의 색 표시: 좋은 수는 초록, 이상한 수는 노랑, 블런더는 빨강.

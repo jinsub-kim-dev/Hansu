@@ -3,10 +3,11 @@ from datetime import datetime
 from typing import Annotated
 
 import chess
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session
 
-from app.analysis.positions import PositionError, board_from_input, position_key
+from app.analysis.positions import board_from_input, position_key
+from app.i18n import AppError
 from app.analysis.stats import position_move_stats
 from app.db import get_session
 from app.models.schemas import Platform, PositionMoveStatsOut, Side
@@ -29,13 +30,10 @@ def get_position_moves(
     session: Session = Depends(get_session),
 ):
     """주어진 포지션에서 플레이어 본인과 상대들이 다음에 둔 수의 통계."""
-    try:
-        board = board_from_input(fen=fen, pgn=pgn)
-    except PositionError as exc:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
+    board = board_from_input(fen=fen, pgn=pgn)  # 잘못된 입력이면 PositionError(422)
     key = position_key(board)
     if since and until and since >= until:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "기간의 시작이 끝보다 늦습니다.")
+        raise AppError("period_invalid")
     stats = position_move_stats(session, platform, username, key, time_class, color, since, until)
     return PositionMoveStatsOut(
         fen=board.fen(),

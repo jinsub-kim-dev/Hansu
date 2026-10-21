@@ -25,7 +25,7 @@ def link_account(session: Session, user_id: int | None, platform: str, ident: Id
     ).first()
     if existing:
         if user_id is not None and existing.user_id != user_id and session.get(User, user_id):
-            raise AccountConflict("이 계정은 이미 다른 사용자에 연결돼 있습니다. 로그아웃한 뒤 다시 시도하세요.")
+            raise AccountConflict("account_conflict")
         existing.display_name = ident.display_name
         session.add(existing)
         upsert_player(session, platform, ident.username, display_name=ident.display_name)

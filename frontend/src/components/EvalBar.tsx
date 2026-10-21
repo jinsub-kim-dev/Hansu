@@ -1,6 +1,7 @@
 // 체스닷컴식 세로 평가 막대. 백이 유리할수록 흰 부분이 커진다.
 import { useRef } from 'react'
 import type { Color } from '../api/client'
+import { useI18n } from '../i18n'
 import { winChance } from '../lib/eval'
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function EvalBar({ cp, mate, orientation }: Props) {
+  const { t } = useI18n()
   // 다음 포지션을 분석하는 동안에는 직전 평가를 유지해 막대가 가운데로 튀지 않게 한다.
   const last = useRef<{ cp: number; mate: number | null }>({ cp: 0, mate: null })
   if (cp !== null) last.current = { cp, mate }
@@ -22,15 +24,16 @@ export function EvalBar({ cp, mate, orientation }: Props) {
 
   // 보드 아래쪽이 백이면 흰 부분이 아래에서 차오른다.
   const whiteAtBottom = orientation === 'white'
+  const aheadText = t('evalbar.ahead', { side: t(whiteAhead ? 'common.white' : 'common.black'), value: label })
   const labelAtBottom = whiteAhead === whiteAtBottom
 
   return (
     <div
       className={`eval-bar ${cp === null ? 'stale' : ''}`}
       role="meter"
-      aria-label="엔진 평가"
-      aria-valuetext={`${whiteAhead ? '백' : '흑'} 우세 ${label}`}
-      title={`${whiteAhead ? '백' : '흑'} 우세 ${label}`}
+      aria-label={t('evalbar.label')}
+      aria-valuetext={aheadText}
+      title={aheadText}
     >
       <div
         className="eval-bar-white"

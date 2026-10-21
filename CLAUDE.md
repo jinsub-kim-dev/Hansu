@@ -68,6 +68,11 @@ cd frontend && npm run typecheck
 - 세션 서명 키는 `SECRET_KEY`, 없으면 개발용으로 `backend/data/secret_key`에 만들어 쓴다.
 - 아직 가져오기·분석 API 자체는 로그인 없이도 호출된다(공개 배포 전에 로그인 사용자 기준 제한을 붙여야 한다).
 
+### 다국어 (한국어 / 영어)
+
+- 프론트엔드: 화면 문구는 모두 `frontend/src/i18n/ko.ts`(키의 기준)와 `en.ts`에 둔다. `en.ts`는 `Record<MessageKey, Msg>`라 키가 빠지면 타입 검사가 실패한다. 값은 `{이름}` 자리 채우기 문자열 또는 복수형 등을 위한 함수. 컴포넌트는 `useI18n()`의 `t(키, 값)`·`formatDate`·`formatNumber`를, React 밖 코드는 `translate()`를 쓴다. 언어는 헤더에서 고르고 브라우저에 기억하며(처음엔 브라우저 언어), 모든 API 요청에 `Accept-Language`를 붙인다. 새 문구를 추가할 때 코드에 한글/영문 문장을 직접 쓰지 않는다.
+- 백엔드: 사용자에게 보이는 오류는 `app/i18n.py`의 `AppError(코드, **값)`로 던지고, 공통 처리기가 요청의 `Accept-Language`로 `{"detail": 문장, "code": 코드}`를 만든다(헤더가 없으면 한국어). 가져오기 작업 오류·엔진 실패도 코드로 보관했다가 조회하는 요청의 언어로 만든다. OAuth 콜백 오류는 `?auth_error=<코드>`로 넘기고 프론트엔드가 번역한다. 문구는 `MESSAGES`에 한국어·영어를 함께 둔다.
+
 ### 오프닝 분류
 
 `backend/app/data/openings/*.tsv`는 [lichess-org/chess-openings](https://github.com/lichess-org/chess-openings)(CC0)의 ECO·이름·수순 목록이다. `analysis/openings.py`의 `OpeningBook`이 서버 시작 시 각 수순의 최종 포지션을 포지션 키로 색인한다(약 3,900개, 1초). 포지션으로 찾으므로 트랜스포지션도 인식한다. `GET /api/openings/classify?fen=<시작 FEN>&moves=<uci>...`는 라인에서 마지막으로 지나간 이론 포지션의 오프닝, 현재 포지션이 이론인지(`in_book`), 이탈 후 둔 수, 이론으로 이어지는 다음 수(`continuations`)를 돌려준다. 프론트엔드는 오른쪽 사이드바 맨 위 `OpeningPanel`과 통계 표의 "이론" 표시로 보여준다.

@@ -1,0 +1,169 @@
+// 한국어 문구. 키 목록의 기준이다(en.ts는 같은 키를 모두 가져야 한다).
+// 값은 문자열({이름} 자리 채우기) 또는 값을 받아 문장을 만드는 함수.
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export type Params = Record<string, any>
+export type Msg = string | ((p: Params) => string)
+
+export const ko = {
+  // 앱
+  'app.title': '한수 · 체스 복기',
+  'app.name': '한수',
+  'app.subtitle': '체스 복기 · 포지션별 수순 통계',
+  'app.sound': '착수음',
+  'app.language': '언어',
+
+  // 공통
+  'common.white': '백',
+  'common.black': '흑',
+  'common.games': (p: Params) => `${p.n}국`,
+  'common.lastGame': (p: Params) => `마지막 대국 ${p.date}`,
+  'platform.chesscom': '체스닷컴',
+  'platform.lichess': '리체스',
+  'sound.wood': '나무 말',
+  'sound.sfx': '효과음',
+  'sound.off': '끄기',
+  'error.requestFailed': '요청 실패 ({status})',
+  'error.invalidFen': '잘못된 FEN입니다: {detail}',
+  'error.invalidPgn': 'PGN을 해석할 수 없습니다: {detail}',
+
+  // 로그인 오류(백엔드가 코드로 넘김)
+  'authError.login_cancelled': '로그인을 취소했습니다.',
+  'authError.login_error': '로그인 중 오류가 발생했습니다.',
+  'authError.login_expired': '로그인 요청이 만료됐습니다. 다시 시도하세요.',
+  'authError.login_verify_failed': '로그인 확인에 실패했습니다. 다시 시도하세요.',
+  'authError.account_info_failed': '계정 정보를 받지 못했습니다.',
+  'authError.account_conflict': '이 계정은 이미 다른 사용자에 연결돼 있습니다. 로그아웃한 뒤 다시 시도하세요.',
+  'authError.provider_not_ready': '이 플랫폼의 계정 연결은 아직 준비 중입니다.',
+  'authError.unknown': '로그인에 실패했습니다.',
+
+  // 내 계정
+  'account.title': '내 계정',
+  'account.logout': '로그아웃',
+  'account.noGames': '아직 가져온 대국이 없어요',
+  'account.updateTitle': '마지막 대국 이후 새 대국을 받습니다',
+  'account.importTitle': (p: Params) => `최근 ${p.years}년치 대국을 받습니다`,
+  'account.update': '↻ 업데이트',
+  'account.import': '가져오기',
+  'account.unlink': '연결 해제',
+  'account.unlinkConfirm': (p: Params) => `${p.platform} 계정 연결을 끊을까요? 가져온 대국 데이터는 남습니다.`,
+  'account.connect': (p: Params) => `${p.platform} 계정 연결`,
+  'account.pending': 'OAuth 승인 대기 중이에요. 그동안은 아이디로 대국을 가져올 수 있어요.',
+  'account.usernamePlaceholder': (p: Params) => `${p.platform} 아이디`,
+  'account.hint': (p: Params) =>
+    `계정을 연결하면 내 대국을 자동으로 가져옵니다. 처음에는 최근 ${p.years}년치, 이후에는 새 대국만 받아요.`,
+  'account.doneInitial': (p: Params) => `최근 ${p.years}년 대국 ${p.n}개를 가져왔어요.`,
+  'account.doneAdded': (p: Params) => `새 대국 ${p.n}개를 추가했어요.`,
+  'account.doneNone': '새 대국이 없어요. 이미 최신이에요.',
+  'account.others': (p: Params) => `다른 플레이어 (${p.n})`,
+  'account.refresh': '새 대국 업데이트',
+  'account.refreshLabel': (p: Params) => `${p.name} 새 대국 업데이트`,
+  'import.initial': (p: Params) => `${p.name} · 최근 ${p.years}년 대국 가져오는 중`,
+  'import.update': (p: Params) => `${p.name} · ${p.date} 이후 새 대국 확인 중`,
+  'import.months': (p: Params) => `${p.done}/${p.total}개월`,
+  'import.seen': (p: Params) => `${p.n}국 확인`,
+  'import.added': (p: Params) => `새 대국 ${p.n}개`,
+
+  // 포지션 입력 / 수순
+  'position.title': '포지션 입력',
+  'position.placeholder':
+    'FEN 또는 PGN을 붙여 넣으세요.\n예) 1. e4 e5 2. Nf3 Nc6\n예) rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1',
+  'position.load': '불러오기',
+  'position.reset': '초기 포지션',
+  'moves.empty': '보드에서 말을 움직이거나 표의 수를 클릭하세요.',
+  'nav.first': '처음',
+  'nav.prev': '이전',
+  'nav.next': '다음',
+  'nav.last': '끝',
+
+  // 보드
+  'evalbar.label': '엔진 평가',
+  'evalbar.ahead': (p: Params) => `${p.side} 우세 ${p.value}`,
+  'help.button': '보드 표시 도움말',
+  'help.title': '보드 표시 안내',
+  'help.arrows.title': '화살표 = 이 포지션에서 실제로 둔 수',
+  'help.arrows.desc': '오른쪽 탭(내가 둔 수 / 상대들이 둔 수)에 따라, 저장된 대국에서 이 포지션 다음에 둔 수를 보여줘요.',
+  'help.arrows.width': '굵을수록 자주 둔 수예요.',
+  'help.arrows.number': '가운데 숫자는 그 수를 둔 비율(%)이에요. 8% 이상인 수에만 표시해요.',
+  'help.colors.title': '화살표 색 = 엔진 판정',
+  'help.colors.good': '최선·좋은 수',
+  'help.colors.dubious': '부정확·실수',
+  'help.colors.bad': '블런더',
+  'help.colors.unknown': '아직 분석 전',
+  'help.colors.engine': '엔진이 추천하는 최선 수',
+  'help.colors.note': '엔진 후보 줄에 마우스를 올리면 보라 점선이 그 수로 바뀌어요.',
+  'help.other.title': '그 밖의 표시',
+  'help.other.evalbar': '왼쪽 막대: 엔진 평가. 흰 부분이 클수록 백이 유리하고, 숫자는 폰 단위 차이예요(M3 = 3수 메이트).',
+  'help.other.check': '킹 칸의 붉은 빛: 체크 (진하면 체크메이트)',
+  'help.other.note': '표의 수에 마우스를 올리면 화살표가 강조되고, 클릭하면 그 수를 둬요.',
+
+  // 오프닝
+  'opening.title': '오프닝',
+  'opening.inBook': '이론',
+  'opening.outOfBook': (p: Params) => `이론 이탈 · ${p.n}수`,
+  'opening.loading': '확인 중…',
+  'opening.beforeStart': '오프닝 시작 전',
+  'opening.outside': '오프닝 이론 밖의 포지션',
+  'opening.bookMoves': '이론 수',
+
+  // 엔진
+  'engine.title': '엔진',
+  'engine.requesting': '분석 요청 중…',
+  'engine.analyzing': '분석 중…',
+  'engine.depth': (p: Params) => ` · 깊이 ${p.depth}`,
+  'engine.clickToPlay': '클릭하면 이 수를 둡니다',
+
+  // 다음 수 통계
+  'stats.title': '다음 수 통계',
+  'stats.noPlayer': '왼쪽에서 계정을 연결하거나 플레이어를 고르세요.',
+  'stats.mySide': '내 진영',
+  'stats.filter': '필터',
+  'stats.applied': '적용 중',
+  'stats.removeFilter': (p: Params) => `${p.label} 필터 해제`,
+  'stats.period': '기간',
+  'stats.timeClass': '시간 규칙',
+  'stats.myMoves': '내가 둔 수',
+  'stats.oppMoves': '상대들이 둔 수',
+  'stats.notMyTurn': (p: Params) => `지금은 ${p.turn} 차례라 내가 둘 수가 없어요`,
+  'stats.notOppTurn': (p: Params) => `지금은 ${p.turn} 차례라 상대(${p.opp})가 둘 수가 없어요`,
+  'stats.turn': (p: Params) => `${p.turn} 차례`,
+  'stats.listTitle': (p: Params) => `내가 ${p.color}을 잡은 대국`,
+  'stats.listNote': '승률은 내 기준',
+  'stats.emptyFilteredTitle': '이 조건에 맞는 기록이 없어요',
+  'stats.emptyTitle': '아직 이 포지션의 기록이 없어요',
+  'stats.emptyFilteredDesc': '필터를 조금 풀면 더 많은 대국에서 찾아볼 수 있어요.',
+  'stats.emptyDesc': '내가 둔 대국 중에는 이 포지션까지 온 적이 없네요. 대국을 더 두면서 나만의 수순 데이터를 채워 보세요!',
+  'stats.resetFilters': '필터 초기화',
+
+  // 통계 표
+  'table.move': '수',
+  'table.eval': '평가',
+  'table.games': '대국',
+  'table.share': '비율',
+  'table.wdl': '승 / 무 / 패',
+  'table.clickToPlay': '클릭하면 이 수를 둡니다',
+  'table.bookMove': '오프닝 이론 수',
+  'table.wdlTitle': (p: Params) => `승 ${p.w} · 무 ${p.d} · 패 ${p.l}`,
+  'table.lossVsBest': (p: Params) => ` · 최선 대비 -${p.loss}`,
+  'cls.best': '최선',
+  'cls.good': '좋음',
+  'cls.inaccuracy': '부정확',
+  'cls.mistake': '실수',
+  'cls.blunder': '블런더',
+
+  // 필터 선택지
+  'tc.all': '전체',
+  'tc.bullet': '불렛',
+  'tc.blitz': '블리츠',
+  'tc.rapid': '래피드',
+  'tc.classical': '클래시컬',
+  'tc.daily': '일일 체스',
+  'period.all': '전체 기간',
+  'period.last1m': '최근 1개월',
+  'period.last3m': '최근 3개월',
+  'period.last1y': '최근 1년',
+  'period.last3y': '최근 3년',
+  'period.from': '시작일',
+  'period.to': '종료일',
+} satisfies Record<string, Msg>
+
+export type MessageKey = keyof typeof ko

@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { defaultPieces } from 'react-chessboard'
 import type { Color, MoveEval, PlayerSummary, PositionMoveStats } from '../api/client'
+import { useI18n } from '../i18n'
 import { moveColor } from '../lib/eval'
 import { MoveStatsTable } from './MoveStatsTable'
 import { PeriodFilter, periodLabel, type Period } from './PeriodFilter'
@@ -53,21 +54,23 @@ function EmptyPieces() {
   )
 }
 
-const MY_COLOR_OPTIONS: { value: Color; label: string }[] = [
-  { value: 'white', label: '백' },
-  { value: 'black', label: '흑' },
+const MY_COLOR_OPTIONS: { value: Color; label: 'common.white' | 'common.black' }[] = [
+  { value: 'white', label: 'common.white' },
+  { value: 'black', label: 'common.black' },
 ]
 
 export function StatsPanel(props: Props) {
   const { player, stats, side, sideColors, sideToMove, myColor, onMyColor, filters, onFilters } = props
+  const { t, formatNumber } = useI18n()
   const [open, setOpen] = useState(false)
 
   const head = (
     <header className="section-head">
-      <h3 className="section-title">다음 수 통계</h3>
+      <h3 className="section-title">{t('stats.title')}</h3>
       {player && (
         <span className="section-meta">
-          {player.display_name ?? player.username} · {player.total_games.toLocaleString()}국
+          {player.display_name ?? player.username} ·{' '}
+          {t('common.games', { n: formatNumber(player.total_games), count: player.total_games })}
         </span>
       )}
     </header>
@@ -78,7 +81,7 @@ export function StatsPanel(props: Props) {
       <section className="insight-section stats sec-blue">
         {head}
         <div className="section-body">
-          <p className="body-text muted">왼쪽에서 계정을 연결하거나 플레이어를 고르세요.</p>
+          <p className="body-text muted">{t('stats.noPlayer')}</p>
         </div>
       </section>
     )
@@ -96,7 +99,8 @@ export function StatsPanel(props: Props) {
       clear: () => onFilters((f) => ({ ...f, timeClasses: f.timeClasses.filter((x) => x !== tc) })),
     })
 
-  const turn = sideToMove === 'white' ? '백' : '흑'
+  const colorName = (c: Color) => t(c === 'white' ? 'common.white' : 'common.black')
+  const turn = colorName(sideToMove)
   const group = stats ? stats[side] : null
 
   return (
@@ -105,9 +109,9 @@ export function StatsPanel(props: Props) {
       <div className="section-body">
         {/* 도구 막대: 내 진영 + 필터 */}
         <div className="field">
-          <span className="field-label">내 진영</span>
+          <span className="field-label">{t('stats.mySide')}</span>
           <div className="toolbar">
-            <div className="seg seg-sm side-pick" role="radiogroup" aria-label="내 진영">
+            <div className="seg seg-sm side-pick" role="radiogroup" aria-label={t('stats.mySide')}>
               {MY_COLOR_OPTIONS.map((o) => (
                 <button
                   key={o.value}
@@ -117,7 +121,7 @@ export function StatsPanel(props: Props) {
                   onClick={() => onMyColor(o.value)}
                 >
                   <KingIcon />
-                  {o.label}
+                  {t(o.label)}
                 </button>
               ))}
             </div>
@@ -126,7 +130,8 @@ export function StatsPanel(props: Props) {
               onClick={() => setOpen(!open)}
               aria-expanded={open}
             >
-              필터{active.length > 0 && <span className="ctl-count">{active.length}</span>}
+              {t('stats.filter')}
+              {active.length > 0 && <span className="ctl-count">{active.length}</span>}
               <span className="caret">{open ? '▴' : '▾'}</span>
             </button>
           </div>
@@ -134,12 +139,12 @@ export function StatsPanel(props: Props) {
 
         {active.length > 0 && (
           <div className="field">
-            <span className="field-label">적용 중</span>
+            <span className="field-label">{t('stats.applied')}</span>
             <div className="tag-list">
               {active.map((a) => (
                 <span key={a.key} className={`filter-tag tone-${a.tone}`}>
                   {a.label}
-                  <button onClick={a.clear} aria-label={`${a.label} 필터 해제`}>
+                  <button onClick={a.clear} aria-label={t('stats.removeFilter', { label: a.label })}>
                     ×
                   </button>
                 </span>
@@ -151,7 +156,7 @@ export function StatsPanel(props: Props) {
         {open && (
           <div className="filter-drawer">
             <div className="field top">
-              <span className="field-label">기간</span>
+              <span className="field-label">{t('stats.period')}</span>
               <PeriodFilter
                 value={filters.period}
                 onChange={(period) => onFilters((f) => ({ ...f, period }))}
@@ -159,7 +164,7 @@ export function StatsPanel(props: Props) {
               />
             </div>
             <div className="field top">
-              <span className="field-label">시간 규칙</span>
+              <span className="field-label">{t('stats.timeClass')}</span>
               <TimeClassFilter
                 counts={player.by_time_class}
                 selected={filters.timeClasses}
@@ -173,8 +178,8 @@ export function StatsPanel(props: Props) {
         <div className="side-tabs" role="tablist">
           {(['player', 'opponent'] as const).map((s) => {
             const on = side === s
-            const opp = myColor === 'white' ? '흑' : '백'
-            const why = s === 'opponent' ? `지금은 ${turn} 차례라 상대(${opp})가 둘 수가 없어요` : `지금은 ${turn} 차례라 내가 둘 수가 없어요`
+            const opp = colorName(myColor === 'white' ? 'black' : 'white')
+            const why = s === 'opponent' ? t('stats.notOppTurn', { turn, opp }) : t('stats.notMyTurn', { turn })
             return (
               <button
                 key={s}
@@ -187,8 +192,8 @@ export function StatsPanel(props: Props) {
                 title={on ? undefined : why}
               >
                 <span className="dot" />
-                {s === 'player' ? '내가 둔 수' : '상대들이 둔 수'}
-                <span className="count">{on && stats ? stats[s].total.toLocaleString() : '—'}</span>
+                {t(s === 'player' ? 'stats.myMoves' : 'stats.oppMoves')}
+                <span className="count">{on && stats ? formatNumber(stats[s].total) : '—'}</span>
               </button>
             )
           })}
@@ -198,10 +203,10 @@ export function StatsPanel(props: Props) {
         <div className="list-head">
           <span className={`turn-chip ${sideToMove}`}>
             <span className="turn-dot" aria-hidden />
-            {turn} 차례
+            {t('stats.turn', { turn })}
           </span>
-          <span className="list-title">내가 {myColor === 'white' ? '백' : '흑'}을 잡은 대국</span>
-          <span className="list-note">승률은 내 기준</span>
+          <span className="list-title">{t('stats.listTitle', { color: colorName(myColor) })}</span>
+          <span className="list-note">{t('stats.listNote')}</span>
         </div>
 
         {props.error && <p className="error">{props.error}</p>}
@@ -209,19 +214,17 @@ export function StatsPanel(props: Props) {
           <div className="empty-state">
             <EmptyPieces />
             <p className="empty-title">
-              {active.length > 0 ? '이 조건에 맞는 기록이 없어요' : '아직 이 포지션의 기록이 없어요'}
+              {t(active.length > 0 ? 'stats.emptyFilteredTitle' : 'stats.emptyTitle')}
             </p>
             <p className="empty-desc">
-              {active.length > 0
-                ? '필터를 조금 풀면 더 많은 대국에서 찾아볼 수 있어요.'
-                : '내가 둔 대국 중에는 이 포지션까지 온 적이 없네요. 대국을 더 두면서 나만의 수순 데이터를 채워 보세요!'}
+              {t(active.length > 0 ? 'stats.emptyFilteredDesc' : 'stats.emptyDesc')}
             </p>
             {active.length > 0 && (
               <button
                 className="ctl-btn empty-action"
                 onClick={() => onFilters(() => ({ period: { mode: 'all' }, timeClasses: [] }))}
               >
-                필터 초기화
+                {t('stats.resetFilters')}
               </button>
             )}
           </div>

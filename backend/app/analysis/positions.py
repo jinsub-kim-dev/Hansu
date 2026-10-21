@@ -6,8 +6,10 @@ from dataclasses import dataclass
 import chess
 import chess.pgn
 
+from app.i18n import AppError
 
-class PositionError(ValueError):
+
+class PositionError(AppError):
     pass
 
 
@@ -54,16 +56,16 @@ def board_from_input(fen: str | None = None, pgn: str | None = None) -> chess.Bo
         try:
             board = chess.Board(fen.strip())
         except ValueError as exc:
-            raise PositionError(f"잘못된 FEN입니다: {exc}") from exc
+            raise PositionError("invalid_fen", detail=str(exc)) from exc
         if not board.is_valid():
-            raise PositionError("불가능한 포지션입니다.")
+            raise PositionError("impossible_position")
         return board
     if pgn:
         text = pgn.strip()
         # "1. e4 e5 2. Nf3"처럼 헤더 없이 수순만 준 경우도 받는다.
         game = chess.pgn.read_game(io.StringIO(text))
         if game is None or game.errors:
-            raise PositionError("PGN을 해석할 수 없습니다.")
+            raise PositionError("invalid_pgn")
         board = game.board()
         for move in game.mainline_moves():
             board.push(move)

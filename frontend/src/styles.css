@@ -749,3 +749,12 @@ button.secondary { background: transparent; color: var(--text); border-color: va
 .section-body .empty-title { margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--text); }
 .section-body .empty-desc { margin: 0; max-width: 270px; word-break: keep-all; font-size: 0.8rem; line-height: 1.55; color: var(--muted); }
 .empty-action { margin: 8px 0 0; }
+
+/* 헤더 오른쪽: 착수음 + 언어 */
+.header-controls { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+.header-controls .sound-select { margin-left: 0; }
+
+/* 영어 문구가 길어서 항목 이름 열을 넓히고, 목록 제목 줄은 줄바꿈을 허용한다 */
+html[lang="en"] { --label-w: 84px; }
+.list-head { flex-wrap: wrap; row-gap: 4px; }
+.list-head .list-title { white-space: normal; }

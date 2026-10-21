@@ -1,10 +1,11 @@
 from typing import Annotated
 
 import chess
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Query
 
 from app.analysis.openings import get_book
-from app.analysis.positions import PositionError, board_from_input
+from app.analysis.positions import board_from_input
+from app.i18n import AppError
 from app.models.schemas import OpeningClassificationOut
 
 router = APIRouter(prefix="/openings", tags=["openings"])
@@ -18,13 +19,10 @@ def classify_line(
     moves: Annotated[list[str] | None, Query(description="시작 포지션부터 둔 수(UCI), 순서대로")] = None,
 ):
     """라인의 오프닝(이론을 벗어났으면 마지막 이론 포지션의 오프닝)과 이론으로 이어지는 다음 수."""
-    try:
-        board = board_from_input(fen=fen)
-    except PositionError as exc:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
+    board = board_from_input(fen=fen)  # 잘못된 입력이면 PositionError(422)
     ucis = moves or []
     if len(ucis) > MAX_MOVES:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, f"수는 최대 {MAX_MOVES}개까지")
+        raise AppError("too_many_moves", max=MAX_MOVES)
 
     parsed = []
     b = board.copy()
@@ -34,7 +32,7 @@ def classify_line(
         except ValueError:
             move = None
         if move is None or move not in b.legal_moves:
-            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, f"둘 수 없는 수입니다: {uci}")
+            raise AppError("illegal_move", uci=uci)
         parsed.append(move)
         b.push(move)
 

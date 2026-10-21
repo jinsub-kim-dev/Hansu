@@ -12,7 +12,8 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Literal
 
-from app.importers.base import ImporterError, ImportProgress, ProgressCallback
+from app.i18n import AppError
+from app.importers.base import ImportProgress, ProgressCallback
 
 log = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ class ImportJob:
     username: str
     status: JobStatus = "queued"
     progress: ImportProgress = field(default_factory=ImportProgress)
-    error: str | None = None
+    error: AppError | None = None  # 조회하는 요청의 언어로 문장을 만든다
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     finished_at: datetime | None = None
 
@@ -71,10 +72,10 @@ class ImportJobManager:
             try:
                 job.progress = self.runners[job.platform](job.username, on_progress)
                 job.status = "done"
-            except ImporterError as exc:
-                job.status, job.error = "error", str(exc)
+            except AppError as exc:  # 사용자에게 보여줄 오류(수집기 오류 포함)
+                job.status, job.error = "error", exc
             except Exception:
                 log.exception("수집 작업 실패: %s", job_id)
-                job.status, job.error = "error", "대국을 가져오는 중 오류가 발생했습니다."
+                job.status, job.error = "error", AppError("import_failed")
             finally:
                 job.finished_at = datetime.now(UTC)

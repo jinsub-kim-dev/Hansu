@@ -1,5 +1,6 @@
 // 시작 포지션과 그 뒤의 수순(라인)을 다루는 도우미. 보드 상태 계산은 chess.js에 맡긴다.
 import { Chess, DEFAULT_POSITION } from 'chess.js'
+import { translate } from '../i18n'
 
 export interface LineMove {
   san: string
@@ -48,7 +49,7 @@ export function parsePositionInput(text: string): Line {
     try {
       return { startFen: new Chess(input).fen(), moves: [] }
     } catch (e) {
-      throw new Error(`잘못된 FEN입니다: ${(e as Error).message}`)
+      throw new Error(translate('error.invalidFen', { detail: (e as Error).message }))
     }
   }
 
@@ -56,7 +57,7 @@ export function parsePositionInput(text: string): Line {
   try {
     chess.loadPgn(input)
   } catch (e) {
-    throw new Error(`PGN을 해석할 수 없습니다: ${(e as Error).message}`)
+    throw new Error(translate('error.invalidPgn', { detail: (e as Error).message }))
   }
   const history = chess.history({ verbose: true })
   return {

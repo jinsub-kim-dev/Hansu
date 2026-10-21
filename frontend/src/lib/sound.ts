@@ -3,11 +3,8 @@
 export type MoveSound = 'move' | 'capture' | 'castle' | 'check' | 'mate'
 export type SoundSet = 'wood' | 'sfx' | 'off'
 
-export const SOUND_SETS: { value: SoundSet; label: string }[] = [
-  { value: 'wood', label: '나무 말' },
-  { value: 'sfx', label: '효과음' },
-  { value: 'off', label: '끄기' },
-]
+// 이름은 i18n의 sound.<값> 키로 보여준다.
+export const SOUND_SETS: SoundSet[] = ['wood', 'sfx', 'off']
 
 // 소리 종류별로 함께 낼 파일.
 type Files = (kind: MoveSound) => string[]

@@ -41,7 +41,7 @@ FINAL_GRACE = timedelta(days=1)
 
 def validate_username(username: str) -> str:
     if not USERNAME_RE.fullmatch(username):
-        raise ImporterError("체스닷컴 아이디 형식이 올바르지 않습니다.")
+        raise ImporterError("invalid_username", platform=PLATFORM)
     return username.lower()
 
 
@@ -67,11 +67,11 @@ class ChessComClient:
                 self.sleep(self.retry_wait)
                 continue
             if resp.status_code in (404, 410):
-                raise PlayerNotFound("체스닷컴에서 해당 플레이어를 찾을 수 없습니다.")
+                raise PlayerNotFound("player_not_found", platform=PLATFORM)
             if resp.status_code >= 400:
-                raise ImporterError(f"체스닷컴 API 오류 ({resp.status_code})")
+                raise ImporterError("api_error", platform=PLATFORM, status=resp.status_code)
             return resp.json()
-        raise ImporterError("체스닷컴 요청 한도를 초과했습니다. 잠시 뒤 다시 시도하세요.")
+        raise ImporterError("rate_limited", platform=PLATFORM)
 
     def archives(self, username: str) -> list[str]:
         return self._get_json(f"{BASE_URL}/player/{username}/games/archives").get("archives", [])

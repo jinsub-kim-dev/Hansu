@@ -1,5 +1,6 @@
 // 체스닷컴 분석 사이드바처럼 엔진 후보 수를 평가치와 수순으로 보여준다.
 import type { PositionEval } from '../api/client'
+import { useI18n } from '../i18n'
 import { formatEval } from '../lib/eval'
 
 interface Props {
@@ -23,14 +24,15 @@ function numbered(fen: string, sans: string[]): string[] {
 }
 
 export function EnginePanel({ fen, evaluation, onPlay, onHover }: Props) {
+  const { t } = useI18n()
   const pos = evaluation?.position
   let body: React.ReactNode
   if (!evaluation) {
-    body = <p className="body-text muted">분석 요청 중…</p>
+    body = <p className="body-text muted">{t('engine.requesting')}</p>
   } else if (evaluation.status === 'unavailable' || evaluation.status === 'failed') {
     body = <p className="error">{evaluation.message}</p>
   } else if (!pos) {
-    body = <p className="body-text muted">{evaluation.message ?? '분석 중…'}</p>
+    body = <p className="body-text muted">{evaluation.message ?? t('engine.analyzing')}</p>
   } else {
     body = (
       <ol className="engine-lines" onMouseLeave={() => onHover(null)}>
@@ -42,8 +44,7 @@ export function EnginePanel({ fen, evaluation, onPlay, onHover }: Props) {
                 className="engine-line"
                 onClick={() => onPlay(line.uci)}
                 onMouseEnter={() => onHover(line.uci)}
-                title={`${numbered(fen, line.pv_san).join(' ')}
-클릭하면 이 수를 둡니다`}
+                title={`${numbered(fen, line.pv_san).join(' ')}\n${t('engine.clickToPlay')}`}
               >
                 <span className={`eval-chip ${whiteAhead ? 'white' : 'black'}`}>
                   {formatEval(line.cp, line.mate)}
@@ -66,10 +67,10 @@ export function EnginePanel({ fen, evaluation, onPlay, onHover }: Props) {
   return (
     <section className="insight-section engine sec-violet">
       <header className="section-head">
-        <h3 className="section-title">엔진</h3>
+        <h3 className="section-title">{t('engine.title')}</h3>
         <span className="section-meta">
-          {evaluation?.status === 'pending' && <span className="spinner" aria-label="분석 중" />}
-          Stockfish{evaluation?.depth ? ` · 깊이 ${evaluation.depth}` : ''}
+          {evaluation?.status === 'pending' && <span className="spinner" aria-label={t('engine.analyzing')} />}
+          Stockfish{evaluation?.depth ? t('engine.depth', { depth: evaluation.depth }) : ''}
         </span>
       </header>
       <div className="section-body">{body}</div>

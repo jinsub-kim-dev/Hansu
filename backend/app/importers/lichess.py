@@ -57,7 +57,7 @@ TIME_CLASS = {
 
 def validate_username(username: str) -> str:
     if not USERNAME_RE.fullmatch(username):
-        raise ImporterError("리체스 아이디 형식이 올바르지 않습니다.")
+        raise ImporterError("invalid_username", platform=PLATFORM)
     return username.lower()
 
 
@@ -76,9 +76,9 @@ class LichessClient:
 
     def _check(self, resp: httpx.Response) -> None:
         if resp.status_code == 404:
-            raise PlayerNotFound("리체스에서 해당 플레이어를 찾을 수 없습니다.")
+            raise PlayerNotFound("player_not_found", platform=PLATFORM)
         if resp.status_code >= 400:
-            raise ImporterError(f"리체스 API 오류 ({resp.status_code})")
+            raise ImporterError("api_error", platform=PLATFORM, status=resp.status_code)
 
     def user(self, username: str) -> dict[str, Any]:
         for attempt in range(self.max_retries + 1):
@@ -90,7 +90,7 @@ class LichessClient:
                 break
             self._check(resp)
             return resp.json()
-        raise ImporterError("리체스 요청 한도를 초과했습니다. 잠시 뒤 다시 시도하세요.")
+        raise ImporterError("rate_limited", platform=PLATFORM)
 
     def games(self, username: str, since: datetime) -> Iterator[dict[str, Any]]:
         """since 이후에 시작된 끝난 대국을 오래된 순으로 스트리밍한다."""
@@ -121,7 +121,7 @@ class LichessClient:
                     if line.strip():
                         yield json.loads(line)
                 return
-        raise ImporterError("리체스 요청 한도를 초과했습니다. 잠시 뒤 다시 시도하세요.")
+        raise ImporterError("rate_limited", platform=PLATFORM)
 
 
 def make_http_client(user_agent: str) -> httpx.Client:

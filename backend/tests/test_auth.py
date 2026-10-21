@@ -137,12 +137,12 @@ def test_login_again_returns_same_user(client, lichess):
 def test_rejects_forged_state_and_cancel(client, lichess):
     start_login(client, lichess)
     back = finish_login(client, "wrong-state")
-    assert "만료" in back["auth_error"]
+    assert back["auth_error"] == "login_expired"  # 오류는 코드로 넘기고 프론트엔드가 번역한다
     assert client.get("/api/me").json()["user_id"] is None
 
     start_login(client, lichess)
     resp = client.get("/api/auth/lichess/callback?error=access_denied", follow_redirects=False)
-    assert "취소" in parse_qs(urlparse(resp.headers["location"]).query)["auth_error"][0]
+    assert parse_qs(urlparse(resp.headers["location"]).query)["auth_error"] == ["login_cancelled"]
 
 
 def test_account_owned_by_other_user_conflicts(client, lichess):
@@ -152,7 +152,7 @@ def test_account_owned_by_other_user_conflicts(client, lichess):
 
     # 사용자 2로 로그인한 채 사용자 1의 계정을 연결하려 하면 막는다.
     back = finish_login(client, start_login(client, lichess), code="code-a")
-    assert "다른 사용자" in back["auth_error"]
+    assert back["auth_error"] == "account_conflict"
     accounts = client.get("/api/me").json()["accounts"]
     assert [a["username"] for a in accounts] == ["other"]
 
