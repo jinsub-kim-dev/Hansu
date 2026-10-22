@@ -13,6 +13,7 @@ from sqlmodel import Session, create_engine
 
 from app.db import init_db
 from app.importers.chesscom import ChessComClient
+from app.models.db import LinkedAccount, User
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -40,6 +41,27 @@ def engine():
 def session(engine):
     with Session(engine) as s:
         yield s
+
+
+@pytest.fixture
+def link_user(engine):
+    """link_user(platform, *usernames) -> 사용자 id. OAuth를 거치지 않고 사용자를 만들어 계정을 연결한다."""
+    return lambda platform, *usernames: _link_user(engine, platform, *usernames)
+
+
+def _link_user(engine, platform: str, *usernames: str) -> int:
+    """사용자를 만들어 계정을 연결하고 사용자 id를 돌려준다.
+
+    한 플랫폼에 여러 아이디를 연결하는 것은 실제로는 없지만, 테스트에서 여러 아이디를 다루려고 허용한다.
+    """
+    with Session(engine) as s:
+        user = User()
+        s.add(user)
+        s.flush()
+        for name in usernames:
+            s.add(LinkedAccount(user_id=user.id, platform=platform, username=name))
+        s.commit()
+        return user.id
 
 
 class FakeChessCom:

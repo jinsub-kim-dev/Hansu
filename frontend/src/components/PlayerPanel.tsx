@@ -1,5 +1,5 @@
 // 내 계정: 플랫폼 계정을 OAuth로 연결하고, 연결된 계정의 대국을 가져오거나 업데이트한다.
-// 체스닷컴은 OAuth 승인 전까지 아이디로 가져오는 방식을 함께 둔다.
+// 연결한 계정의 대국만 볼 수 있다(다른 플레이어의 아이디로는 가져오거나 조회할 수 없다).
 import { useEffect, useRef, useState } from 'react'
 import {
   getAuthProviders,
@@ -29,6 +29,7 @@ const POLL_MS = 1000
 interface Props {
   current: PlayerSummary | null
   onSelect: (summary: PlayerSummary) => void
+  onClear: () => void // 로그아웃·연결 해제로 고른 계정을 더는 볼 수 없을 때
   initialJobId: string | null // OAuth로 돌아온 직후 시작된 가져오기 작업
   authError: string | null // 로그인 실패 코드(백엔드가 ?auth_error=로 넘김)
 }
@@ -51,7 +52,7 @@ function Badge({ platform }: { platform: Platform }) {
   )
 }
 
-export function PlayerPanel({ current, onSelect, initialJobId, authError }: Props) {
+export function PlayerPanel({ current, onSelect, onClear, initialJobId, authError }: Props) {
   const [me, setMe] = useState<Me | null>(null)
   const [providers, setProviders] = useState<AuthProvider[]>([])
   const [saved, setSaved] = useState<SavedPlayer[]>([])
@@ -60,7 +61,6 @@ export function PlayerPanel({ current, onSelect, initialJobId, authError }: Prop
   const { t, formatDate, formatNumber } = useI18n()
   const [authCode, setAuthCode] = useState<string | null>(authError)
   const [error, setError] = useState<string | null>(null)
-  const [fallbackName, setFallbackName] = useState('')
   const timer = useRef<number | undefined>(undefined)
 
   const busy = job?.status === 'queued' || job?.status === 'running'
@@ -81,6 +81,13 @@ export function PlayerPanel({ current, onSelect, initialJobId, authError }: Prop
     // 처음 한 번만
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // 고른 계정이 내 연결 계정에서 빠지면(로그아웃, 연결 해제) 선택을 푼다.
+  useEffect(() => {
+    if (me && current && !me.accounts.some((a) => a.platform === current.platform && a.username === current.username)) {
+      onClear()
+    }
+  }, [me, current, onClear])
 
   async function select(platform: Platform, name: string) {
     setError(null)
@@ -136,8 +143,6 @@ export function PlayerPanel({ current, onSelect, initialJobId, authError }: Prop
 
   const savedOf = (platform: Platform, username: string) =>
     saved.find((s) => s.platform === platform && s.username === username)
-  const linkedKeys = new Set((me?.accounts ?? []).map((a) => `${a.platform}/${a.username}`))
-  const others = saved.filter((s) => !linkedKeys.has(`${s.platform}/${s.username}`))
   const isCurrent = (platform: Platform, username: string) =>
     current?.platform === platform && current.username === username
   const p = job?.progress
@@ -203,26 +208,6 @@ export function PlayerPanel({ current, onSelect, initialJobId, authError }: Prop
               {provider && !provider.enabled && (
                 <p className="muted small">{t('account.pending')}</p>
               )}
-              {provider && !provider.enabled && (
-                <form
-                  className="row fallback"
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    runImport(platform, fallbackName.trim().toLowerCase())
-                  }}
-                >
-                  <input
-                    value={fallbackName}
-                    onChange={(e) => setFallbackName(e.target.value)}
-                    placeholder={t('account.usernamePlaceholder', { platform: label })}
-                    aria-label={t('account.usernamePlaceholder', { platform: label })}
-                    disabled={busy}
-                  />
-                  <button type="submit" className="secondary" disabled={busy || !fallbackName.trim()}>
-                    {t('account.import')}
-                  </button>
-                </form>
-              )}
             </li>
           )
         })}
@@ -245,36 +230,6 @@ export function PlayerPanel({ current, onSelect, initialJobId, authError }: Prop
       {authCode && <p className="error">{t(authErrorKey(authCode))}</p>}
       {error && <p className="error">{error}</p>}
 
-      {others.length > 0 && (
-        <details className="others">
-          <summary>{t('account.others', { n: others.length })}</summary>
-          <ul className="saved-players">
-            {others.map((s) => (
-              <li key={`${s.platform}/${s.username}`} className={isCurrent(s.platform, s.username) ? 'active' : ''}>
-                <button className="pick" onClick={() => select(s.platform, s.username)}>
-                  <span className="name">
-                    <Badge platform={s.platform} />
-                    {s.display_name ?? s.username}
-                  </span>
-                  <span className="muted small">
-                    {t('common.games', { n: formatNumber(s.total_games), count: s.total_games })} ·{' '}
-                    {t('common.lastGame', { date: formatDate(s.last_game_at) })}
-                  </span>
-                </button>
-                <button
-                  className="secondary refresh"
-                  onClick={() => runImport(s.platform, s.username)}
-                  disabled={busy}
-                  title={t('account.refresh')}
-                  aria-label={t('account.refreshLabel', { name: s.username })}
-                >
-                  ↻
-                </button>
-              </li>
-            ))}
-          </ul>
-        </details>
-      )}
     </section>
   )
 }

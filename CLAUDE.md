@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 인증 없는 읽기 전용 API. `GET /pub/player/{username}/games/archives`로 월별 아카이브 URL 목록을 받은 뒤, `GET /pub/player/{username}/games/{YYYY}/{MM}`로 해당 월의 대국(PGN 포함)을 가져온다.
 - 요청은 순차적으로 보낸다. 병렬 요청 시 `429 Too Many Requests`가 발생할 수 있다. 연락처가 담긴 `User-Agent` 헤더를 붙인다.
 - 지난 달의 아카이브는 더 이상 바뀌지 않으므로 한 번 가져오면 DB에 캐시하고, 현재 달만 다시 조회한다.
-- 처음 가져올 때는 최근 `IMPORT_HISTORY_YEARS`년(기본 3년) 동안 끝난 대국만 받는다. 그 이후 업데이트는 DB에 저장된 그 플레이어의 마지막 대국이 끝난 시각부터, 그 달 이후의 아카이브만 요청해 그 뒤에 끝난 대국만 추가한다(`importers/chesscom.py`의 `import_player`). 중간에 끊긴 가져오기도 같은 방식으로 이어서 받는다. 프론트엔드 `PlayerPanel`은 입력한 아이디에 저장된 대국이 없으면 "가져오기"(기간은 `GET /api/import-settings`), 있으면 "업데이트"(마지막 대국 이후)로 안내하고, 선택된 플레이어 카드에 저장 대국 수·마지막 대국·업데이트 버튼을 보여준다.
+- 처음 가져올 때는 최근 `IMPORT_HISTORY_YEARS`년(기본 3년) 동안 끝난 대국만 받는다. 그 이후 업데이트는 DB에 저장된 그 플레이어의 마지막 대국이 끝난 시각부터, 그 달 이후의 아카이브만 요청해 그 뒤에 끝난 대국만 추가한다(`importers/chesscom.py`의 `import_player`). 중간에 끊긴 가져오기도 같은 방식으로 이어서 받는다. 프론트엔드 `PlayerPanel`은 연결한 계정에 저장된 대국이 없으면 "가져오기"(기간은 `GET /api/import-settings`), 있으면 "업데이트"(마지막 대국 이후)로 안내하고, 선택된 플레이어 카드에 저장 대국 수·마지막 대국·업데이트 버튼을 보여준다.
 
 ### 리체스
 - `GET https://lichess.org/api/games/user/{username}` (헤더 `Accept: application/x-ndjson`)로 대국을 스트리밍으로 받는다. `since`/`until`, `pgnInJson=true` 등의 쿼리 파라미터를 사용한다.
@@ -53,7 +53,7 @@ cd frontend && npm install && npm run dev                                  # htt
 cd frontend && npm run typecheck
 ```
 
-환경 변수는 `backend/.env`(커밋하지 않음)에 둘 수 있고, 이미 설정된 환경 변수가 우선한다. 테스트는 `conftest.py`가 `DATABASE_URL=sqlite://`를 먼저 정해 외부 DB에 닿지 않는다.
+환경 변수는 `backend/.env`(커밋하지 않음)에 둘 수 있고, 이미 설정된 환경 변수가 우선한다. **로컬 개발은 SQLite(`backend/data/chess.db`)를 쓰고, 운영 DB(Supabase) 주소는 Render 환경 변수에만 둔다.** 로컬에서 운영 DB에 연결하면 시험 데이터가 섞이고, 스키마를 바꾸는 코드가 배포 전에 운영 DB를 먼저 바꿔 배포 중인 서버를 깨뜨릴 수 있다. 테스트는 `conftest.py`가 `DATABASE_URL=sqlite://`를 먼저 정해 외부 DB에 닿지 않는다.
 
 환경 변수: `DATABASE_URL`(기본 `backend/data/chess.db`, 실행 위치와 무관. `postgresql://`이면 psycopg 드라이버로 바꿔 작은 연결 풀로 연결), `USER_AGENT_CONTACT`, `CORS_ORIGINS`, `IMPORT_HISTORY_YEARS`(처음 가져올 기간, 기본 3), `IMPORT_RATE_LIMIT_PER_HOUR`(IP당 새 가져오기 작업 수, 기본 20), `SECRET_KEY`, `PUBLIC_BASE_URL`, `LICHESS_CLIENT_ID`, `CHESSCOM_CLIENT_ID`/`CHESSCOM_CLIENT_SECRET`, `STOCKFISH_PATH`(비어 있으면 PATH의 `stockfish`), `ENGINE_DEPTH`(기본 18), `ENGINE_MULTIPV`(엔진 후보 수 개수, 기본 3), `ENGINE_THREADS`(기본 CPU 절반), `ENGINE_HASH_MB`(기본 128).
 
@@ -65,10 +65,10 @@ cd frontend && npm run typecheck
 
 `app/auth/`와 `api/auth.py`. 플랫폼 계정을 Authorization Code + PKCE(S256)로 본인 확인해 `User`–`LinkedAccount`로 연결한다(한 사용자당 플랫폼마다 한 계정, 한 플랫폼 계정은 한 사용자에게만). 토큰은 아이디 확인에만 쓰고 저장하지 않는다(리체스는 확인 직후 폐기). 대국 데이터는 계속 공개 API로 가져오며, 연결하자마자 가져오기 작업을 시작해 `?linked=<platform>&job=<id>`로 앱에 돌려보낸다(오류는 `?auth_error=`). 로그인 상태는 Starlette `SessionMiddleware`의 서명 쿠키(`user_id`)에 둔다.
 - 리체스: 등록 없이 `LICHESS_CLIENT_ID`(아무 고유 문자열)로 동작한다.
-- 체스닷컴: OAuth 승인 전이라 `ChessComOAuth.enabled`가 False다. 승인 후 `CHESSCOM_CLIENT_ID/SECRET`을 넣고 엔드포인트와 ID 토큰(JWT) 검증을 구현해 켠다. 그동안 프론트엔드는 체스닷컴만 아이디로 가져오기를 남겨 둔다.
+- 체스닷컴: OAuth 승인 전이라 `ChessComOAuth.enabled`가 False다. 승인 후 `CHESSCOM_CLIENT_ID/SECRET`을 넣고 엔드포인트와 ID 토큰(JWT) 검증을 구현해 켠다. 그동안 체스닷컴 대국은 볼 수 없다.
 - 콜백 주소는 `PUBLIC_BASE_URL`(기본 `http://localhost:5173`) + `/api/auth/{platform}/callback`. 개발 중에는 Vite 프록시를 거쳐 쿠키가 프론트엔드 주소에 붙는다.
 - 세션 서명 키는 `SECRET_KEY`, 없으면 개발용으로 `backend/data/secret_key`에 만들어 쓴다.
-- 아직 가져오기·분석 API 자체는 로그인 없이도 호출된다(공개 배포 전에 로그인 사용자 기준 제한을 붙여야 한다).
+- **연결한 계정의 대국만 볼 수 있다.** 플레이어 데이터를 다루는 API(가져오기 시작·작업 조회, `/api/players`, 플레이어 요약, `/api/stats/position-moves`)는 `auth/access.py`의 `require_linked`로 로그인 사용자가 그 (플랫폼, 아이디)를 연결했는지 확인한다(로그인 전 401, 남의 계정 403 `account_not_linked`, 남의 가져오기 작업은 404). 플레이어 목록은 내 연결 계정만 돌려준다. 다른 플레이어의 아이디로 가져오거나 조회하는 화면은 없다. 연결을 끊어도 대국 데이터는 DB에 남지만 다시 연결하기 전에는 볼 수 없다. 포지션 엔진 평가(`/api/analysis/position`)와 오프닝 분류는 플레이어 데이터가 아니라 로그인 없이 쓸 수 있다. 테스트는 `current_user_id` 의존성을 바꿔 끼우고 `link_user` fixture로 계정을 연결한다.
 
 ### 다국어 (한국어 / 영어)
 

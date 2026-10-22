@@ -47,17 +47,13 @@ export const en: Record<MessageKey, Msg> = {
   'account.unlinkConfirm': (p: Params) =>
     `Unlink your ${p.platform} account? Games you already imported will be kept.`,
   'account.connect': (p: Params) => `Connect ${p.platform}`,
-  'account.pending': 'Sign-in is awaiting approval. Until then, you can import games by username.',
-  'account.usernamePlaceholder': (p: Params) => `${p.platform} username`,
+  'account.pending': 'Chess.com sign-in is awaiting approval. You can connect once it is approved.',
   'account.hint': (p: Params) =>
     `Connect an account to import your games automatically: the last ${p.years} ${plural(p.years, 'year', 'years')} first, then only new games.`,
   'account.doneInitial': (p: Params) =>
     `Imported ${p.n} ${plural(p.count ?? 0, 'game', 'games')} from the last ${p.years} ${plural(p.years, 'year', 'years')}.`,
   'account.doneAdded': (p: Params) => `Added ${p.n} new ${plural(p.count ?? 0, 'game', 'games')}.`,
   'account.doneNone': "No new games. You're up to date.",
-  'account.others': (p: Params) => `Other players (${p.n})`,
-  'account.refresh': 'Fetch new games',
-  'account.refreshLabel': (p: Params) => `Fetch new games for ${p.name}`,
   'import.initial': (p: Params) =>
     `${p.name} · importing the last ${p.years} ${plural(p.years, 'year', 'years')} of games`,
   'import.update': (p: Params) => `${p.name} · checking for games since ${p.date}`,

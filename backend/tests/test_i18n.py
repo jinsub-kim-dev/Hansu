@@ -1,7 +1,10 @@
 import pytest
 from fastapi.testclient import TestClient
+from sqlmodel import Session
 
 from app.analysis.engine import AnalysisService
+from app.auth.access import current_user_id
+from app.db import get_session
 from app.i18n import AppError, parse_lang, translate
 from app.importers.jobs import ImportJobManager
 from app.main import create_app
@@ -25,11 +28,19 @@ def test_translate_platform_names():
 
 
 @pytest.fixture
-def client(engine):
+def client(engine, link_user):
     def failing(username, on_progress):
         raise AppError("player_not_found", status_code=404, platform="chesscom")
 
     app = create_app(ImportJobManager({"chesscom": failing}), AnalysisService(engine, None, depth=12), init=False)
+    user_id = link_user("chesscom", "x", "someone")
+    app.dependency_overrides[current_user_id] = lambda: user_id
+
+    def session_override():
+        with Session(engine) as s:
+            yield s
+
+    app.dependency_overrides[get_session] = session_override
     with TestClient(app) as c:
         yield c
 

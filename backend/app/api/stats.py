@@ -9,6 +9,7 @@ from sqlmodel import Session
 from app.analysis.positions import board_from_input, position_key
 from app.i18n import AppError
 from app.analysis.stats import position_move_stats
+from app.auth.access import current_user_id, require_linked
 from app.db import get_session
 from app.models.schemas import Platform, PositionMoveStatsOut, Side
 
@@ -28,8 +29,10 @@ def get_position_moves(
     since: Annotated[datetime | None, Query(description="이 시각 이후(포함)에 끝난 대국만")] = None,
     until: Annotated[datetime | None, Query(description="이 시각 전(미포함)에 끝난 대국만")] = None,
     session: Session = Depends(get_session),
+    user_id: int | None = Depends(current_user_id),
 ):
-    """주어진 포지션에서 플레이어 본인과 상대들이 다음에 둔 수의 통계."""
+    """주어진 포지션에서 플레이어 본인과 상대들이 다음에 둔 수의 통계. 연결한 계정만 조회할 수 있다."""
+    require_linked(session, user_id, platform, username)
     board = board_from_input(fen=fen, pgn=pgn)  # 잘못된 입력이면 PositionError(422)
     key = position_key(board)
     if since and until and since >= until:

@@ -161,7 +161,8 @@ def test_unlink(client, lichess):
     finish_login(client, start_login(client, lichess))
     assert client.delete("/api/me/accounts/lichess").json() == {"ok": True}
     assert client.get("/api/me").json()["accounts"] == []
-    # 대국 데이터(저장된 플레이어)는 남는다.
-    assert client.get("/api/players/lichess/testuser").status_code == 200
+    # 연결을 끊으면 그 계정의 대국은 더 볼 수 없다(데이터는 DB에 남는다).
+    assert client.get("/api/players/lichess/testuser").status_code == 403
+    assert client.get("/api/players").json() == []
     client.post("/api/auth/logout")
     assert client.delete("/api/me/accounts/lichess").status_code == 401

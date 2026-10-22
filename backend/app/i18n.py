@@ -61,6 +61,10 @@ MESSAGES: dict[str, dict[str, str]] = {
         "en": "{platform} sign-in is not available yet.",
     },
     "login_required": {"ko": "로그인이 필요합니다.", "en": "Please sign in."},
+    "account_not_linked": {
+        "ko": "연결한 {platform} 계정의 대국만 볼 수 있습니다.",
+        "en": "You can only view games of your linked {platform} account.",
+    },
     "login_cancelled": {"ko": "로그인을 취소했습니다.", "en": "Sign-in was cancelled."},
     "login_error": {"ko": "로그인 오류: {error}", "en": "Sign-in error: {error}"},
     "login_expired": {

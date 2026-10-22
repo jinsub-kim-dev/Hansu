@@ -1,5 +1,5 @@
 // 포지션 탐색: 주어진 포지션에서 플레이어 본인 또는 상대들이 다음에 둔 수를 화살표로 보여준다.
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   getPlayer,
   getPositionMoves,
@@ -37,9 +37,10 @@ function readLastPlayer(): { platform: Platform; username: string } | null {
   }
 }
 
-function writeLastPlayer(s: PlayerSummary) {
+function writeLastPlayer(s: PlayerSummary | null) {
   try {
-    localStorage.setItem(LAST_PLAYER_KEY, JSON.stringify({ platform: s.platform, username: s.username }))
+    if (s) localStorage.setItem(LAST_PLAYER_KEY, JSON.stringify({ platform: s.platform, username: s.username }))
+    else localStorage.removeItem(LAST_PLAYER_KEY)
   } catch {
     // 저장소를 못 쓰면 기억하지 않는다.
   }
@@ -84,7 +85,7 @@ export function ExplorerPage() {
     if (!last) return
     getPlayer(last.platform, last.username)
       .then((s) => setPlayer((cur) => cur ?? s))
-      .catch(() => {}) // DB에서 지워졌으면 무시
+      .catch(() => {}) // 로그인하지 않았거나 연결을 끊었으면 무시
   }, [])
 
   useEffect(() => {
@@ -188,6 +189,12 @@ export function ExplorerPage() {
     setFilters((f) => ({ ...f, timeClasses: [] }))
   }
 
+  const onPlayerGone = useCallback(() => {
+    setPlayer(null)
+    setStats(null)
+    writeLastPlayer(null)
+  }, [])
+
 
   return (
     <div className="layout">
@@ -195,6 +202,7 @@ export function ExplorerPage() {
         <PlayerPanel
           current={player}
           onSelect={onPlayerReady}
+          onClear={onPlayerGone}
           initialJobId={authReturn.jobId}
           authError={authReturn.error}
         />

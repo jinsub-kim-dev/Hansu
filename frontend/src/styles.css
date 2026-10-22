@@ -207,25 +207,6 @@ button.secondary { background: transparent; color: var(--text); border-color: va
 .moves .move.current { background: var(--accent); color: #fff; }
 
 .small { font-size: 0.82rem; }
-.saved-players { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow: auto; }
-.saved-players li { display: flex; gap: 4px; border: 1px solid var(--border); border-radius: 6px; }
-.saved-players li.active { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
-.saved-players .pick {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 9px 12px;
-  background: transparent;
-  border: none;
-  color: var(--text);
-  text-align: left;
-}
-.saved-players .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.saved-players .pick > .small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.saved-players .refresh { border: none; padding: 0 10px; }
 
 .engine-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .engine-line {
@@ -342,7 +323,6 @@ button.secondary { background: transparent; color: var(--text); border-color: va
 .platform-toggle .platform-badge { margin-right: 0; }
 .platform-badge.chesscom { background: #6a9f3a; }
 .platform-badge.lichess { background: #5b5b5b; }
-.saved-players .name, .player-card-head .name { display: flex; align-items: center; min-width: 0; }
 
 /* 내 계정 */
 .panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
@@ -359,11 +339,6 @@ button.secondary { background: transparent; color: var(--text); border-color: va
 .account.empty { border-style: dashed; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
 .connect-btn { display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 8px; font-weight: 600; }
 .connect-btn:hover:not(:disabled) { border-color: var(--accent); }
-.account.empty .fallback input { padding: 4px 8px; font-size: 0.85rem; }
-.account.empty .fallback button { font-size: 0.8rem; padding: 4px 10px; }
-.others { margin-top: 16px; }
-.others summary { cursor: pointer; font-size: 0.85rem; color: var(--muted); }
-.others .saved-players { margin-top: 10px; }
 
 /* ==== 오른쪽 사이드바 ====
    구역마다 카드 하나: 제목 띠(section-head) + 본문(section-body).
