@@ -87,7 +87,7 @@ cd frontend && npm run typecheck
 
 - 대국 데이터: [Chess.com Published-Data API](https://www.chess.com/news/view/published-data-api), [Lichess API](https://lichess.org/api)
 - 오프닝 이름: [lichess-org/chess-openings](https://github.com/lichess-org/chess-openings) (CC0) — `backend/app/data/openings/`
-- 착수음: [PyChess](https://github.com/pychess/pychess) (GPL-3.0-or-later), [Lichess](https://github.com/lichess-org/lila) SFX (AGPL-3.0-or-later) — 각 폴더의 `LICENSE.txt` 참고 (`frontend/public/sounds/`)
+- 착수음: [PyChess](https://github.com/pychess/pychess) (GPL-3.0-or-later) — `frontend/public/sounds/wood/LICENSE.txt`
 - 기물 그림·아이콘: [react-chessboard](https://github.com/Clariity/react-chessboard)에 포함된 기물 SVG
 - 엔진: [Stockfish.js](https://github.com/nmrugg/stockfish.js) 18 lite (GPL-3.0) — `frontend/public/engine/`
 - 엔진 평가: [Lichess 클라우드 평가](https://lichess.org/api#tag/Analysis/operation/apiCloudEval)
@@ -98,4 +98,4 @@ Copyright (C) 2026 jinsub-kim-dev
 
 이 프로그램은 [GNU Affero General Public License v3.0](LICENSE) 이상(AGPL-3.0-or-later)으로 배포합니다. 수정한 버전을 배포하거나 네트워크 서비스로 제공할 때는 같은 라이선스로 소스 코드를 공개해야 합니다.
 
-함께 들어 있는 제3자 자료는 각자의 라이선스를 따릅니다: Stockfish.js(GPL-3.0, `frontend/public/engine/COPYING.txt`), 착수음(GPL-3.0-or-later / AGPL-3.0-or-later, `frontend/public/sounds/*/LICENSE.txt`), 오프닝 목록(CC0, `backend/app/data/openings/SOURCE.txt`).
+함께 들어 있는 제3자 자료는 각자의 라이선스를 따릅니다: Stockfish.js(GPL-3.0, `frontend/public/engine/COPYING.txt`), 착수음(GPL-3.0-or-later, `frontend/public/sounds/wood/LICENSE.txt`), 오프닝 목록(CC0, `backend/app/data/openings/SOURCE.txt`).

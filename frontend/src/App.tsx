@@ -1,17 +1,20 @@
 import { useState } from 'react'
-import { getSoundSet, playMoveSound, preloadSounds, setSoundSet, SOUND_SETS, type SoundSet } from './lib/sound'
+import { getSoundOn, playMoveSound, preloadSounds, setSoundOn } from './lib/sound'
 import { LANGS, useI18n, type Lang } from './i18n'
 import { ExplorerPage } from './pages/ExplorerPage'
 
 export function App() {
   const { t, lang, setLang } = useI18n()
-  const [soundSet, setSoundSetState] = useState(getSoundSet)
+  const [soundOn, setSoundOnState] = useState(getSoundOn)
 
-  function changeSound(set: SoundSet) {
-    setSoundSet(set)
-    setSoundSetState(set)
-    preloadSounds()
-    playMoveSound('move') // 고른 소리를 한 번 들려준다.
+  function toggleSound() {
+    const on = !soundOn
+    setSoundOn(on)
+    setSoundOnState(on)
+    if (on) {
+      preloadSounds()
+      playMoveSound('move') // 켰다는 것을 한 번 들려준다.
+    }
   }
 
   return (
@@ -23,16 +26,17 @@ export function App() {
         </h1>
         <span className="muted">{t('app.subtitle')}</span>
         <div className="header-controls">
-          <label className="sound-select">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={soundOn}
+            className="sound-toggle"
+            onClick={toggleSound}
+            title={soundOn ? t('sound.turnOff') : t('sound.turnOn')}
+          >
             {t('app.sound')}
-            <select value={soundSet} onChange={(e) => changeSound(e.target.value as SoundSet)}>
-              {SOUND_SETS.map((s) => (
-                <option key={s} value={s}>
-                  {t(`sound.${s}`)}
-                </option>
-              ))}
-            </select>
-          </label>
+            <span className="switch" aria-hidden />
+          </button>
           <label className="sound-select">
             {t('app.language')}
             <select value={lang} onChange={(e) => setLang(e.target.value as Lang)}>

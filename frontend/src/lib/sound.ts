@@ -1,44 +1,23 @@
 // 착수음. public/sounds의 녹음 파일을 Web Audio로 재생한다(처음 한 번 디코딩해 두어 지연이 없다).
 // 음원 출처와 라이선스는 public/sounds/*/LICENSE.txt 참고.
 export type MoveSound = 'move' | 'capture' | 'castle' | 'check' | 'mate'
-export type SoundSet = 'wood' | 'sfx' | 'off'
 
-// 이름은 i18n의 sound.<값> 키로 보여준다.
-export const SOUND_SETS: SoundSet[] = ['wood', 'sfx', 'off']
-
-// 소리 종류별로 함께 낼 파일.
-type Files = (kind: MoveSound) => string[]
-
-const FILES: Record<Exclude<SoundSet, 'off'>, Files> = {
-  // 백·흑 구분 없이 모두 흑 진영 녹음을 쓴다. 잡기는 착수음과 다른 별도 녹음.
-  wood: (kind) => {
-    switch (kind) {
-      case 'move':
-        return ['wood/move.mp3']
-      case 'capture':
-        return ['wood/capture.mp3']
-      case 'castle':
-        return ['wood/castle.mp3']
-      case 'check':
-      case 'mate':
-        return ['wood/move.mp3', 'wood/check.mp3']
-    }
-  },
-  sfx: (kind) => {
-    switch (kind) {
-      case 'move':
-      case 'castle':
-        return ['sfx/Move.mp3']
-      case 'capture':
-        return ['sfx/Capture.mp3']
-      case 'check':
-        return ['sfx/Check.mp3']
-      case 'mate':
-        return ['sfx/Checkmate.mp3']
-    }
-  },
+// 백·흑 구분 없이 모두 흑 진영 나무 말 녹음을 쓴다. 잡기는 착수음과 다른 별도 녹음.
+function files(kind: MoveSound): string[] {
+  switch (kind) {
+    case 'move':
+      return ['wood/move.mp3']
+    case 'capture':
+      return ['wood/capture.mp3']
+    case 'castle':
+      return ['wood/castle.mp3']
+    case 'check':
+    case 'mate':
+      return ['wood/move.mp3', 'wood/check.mp3']
+  }
 }
 
+// 예전에는 소리 종류('wood'/'sfx'/'off')를 저장하던 키라, 'off'가 아니면 켜진 것으로 본다.
 const SET_KEY = 'chess-review:sound-set'
 
 let ctx: AudioContext | null = null
@@ -71,18 +50,17 @@ export function soundForSan(san: string): MoveSound {
   return 'move'
 }
 
-export function getSoundSet(): SoundSet {
+export function getSoundOn(): boolean {
   try {
-    const v = localStorage.getItem(SET_KEY)
-    return v === 'wood' || v === 'sfx' || v === 'off' ? v : 'wood'
+    return localStorage.getItem(SET_KEY) !== 'off'
   } catch {
-    return 'wood'
+    return true
   }
 }
 
-export function setSoundSet(set: SoundSet) {
+export function setSoundOn(on: boolean) {
   try {
-    localStorage.setItem(SET_KEY, set)
+    localStorage.setItem(SET_KEY, on ? 'on' : 'off')
   } catch {
     // 저장소를 못 쓰면 이번 세션에서만 적용된다.
   }
@@ -90,19 +68,17 @@ export function setSoundSet(set: SoundSet) {
 
 /** 소리 파일을 미리 디코딩해 첫 착수음이 늦게 나지 않게 한다. */
 export function preloadSounds() {
-  const set = getSoundSet()
   const ac = audio()
-  if (set === 'off' || !ac) return
+  if (!getSoundOn() || !ac) return
   for (const kind of ['move', 'capture', 'castle', 'check', 'mate'] as const)
-    for (const f of FILES[set](kind)) void load(ac, f)
+    for (const f of files(kind)) void load(ac, f)
 }
 
 export function playMoveSound(kind: MoveSound) {
-  const set = getSoundSet()
-  if (set === 'off') return
+  if (!getSoundOn()) return
   const ac = audio()
   if (!ac) return
-  for (const file of FILES[set](kind)) {
+  for (const file of files(kind)) {
     void load(ac, file).then((buf) => {
       if (!buf) return
       const src = ac.createBufferSource()
