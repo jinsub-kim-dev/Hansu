@@ -61,8 +61,8 @@ main { padding: 16px; }
 /* 왼쪽 사이드(고정 폭) · 보드(화면 높이에 맞춘 정사각형) · 오른쪽 사이드(남은 폭 전부, 보드와 같은 높이) */
 .layout {
   --gap: 16px;
-  --left: 300px;
-  --right-min: 320px;
+  --left: 340px;
+  --right-min: 300px;
   --evalbar: 28px;
   --board: min(
     calc(100vh - 90px),
