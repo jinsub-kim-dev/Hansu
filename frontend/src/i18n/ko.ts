@@ -6,8 +6,8 @@ export type Msg = string | ((p: Params) => string)
 
 export const ko = {
   // 앱
-  'app.title': '한수 · 체스 복기',
-  'app.name': '한수',
+  'app.title': '묘수 · 체스 복기',
+  'app.name': '묘수',
   'app.subtitle': '체스 복기 · 포지션별 수순 통계',
   'app.sound': '착수음',
   'app.language': '언어',

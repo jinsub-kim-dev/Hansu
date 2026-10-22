@@ -44,7 +44,7 @@ class Settings:
         default_factory=lambda: os.getenv("PUBLIC_BASE_URL", "http://localhost:5173").rstrip("/")
     )
     # 리체스는 사전 등록 없이 아무 고유 client_id로 OAuth(PKCE)를 쓸 수 있다.
-    lichess_client_id: str = field(default_factory=lambda: os.getenv("LICHESS_CLIENT_ID", "hansu"))
+    lichess_client_id: str = field(default_factory=lambda: os.getenv("LICHESS_CLIENT_ID", "myosu"))
     # 체스닷컴 OAuth는 승인 후 받은 값을 넣는다. 비어 있으면 체스닷컴 계정 연결을 끈다.
     chesscom_client_id: str = field(default_factory=lambda: os.getenv("CHESSCOM_CLIENT_ID", ""))
     chesscom_client_secret: str = field(default_factory=lambda: os.getenv("CHESSCOM_CLIENT_SECRET", ""))
@@ -57,7 +57,7 @@ class Settings:
 
     @property
     def user_agent(self) -> str:
-        base = "hansu/0.1"
+        base = "myosu/0.1"
         return f"{base} (contact: {self.user_agent_contact})" if self.user_agent_contact else base
 
 

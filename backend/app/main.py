@@ -77,7 +77,7 @@ def create_app(
         yield
         app.state.analysis_service.shutdown()
 
-    app = FastAPI(title="Hansu (한수)", lifespan=lifespan)
+    app = FastAPI(title="Myosu (묘수)", lifespan=lifespan)
     app.state.job_manager = job_manager or ImportJobManager(
         {"chesscom": _run_chesscom, "lichess": _run_lichess}
     )

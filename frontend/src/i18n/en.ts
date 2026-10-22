@@ -5,8 +5,8 @@ const plural = (n: number, one: string, many: string) => (n === 1 ? one : many)
 
 export const en: Record<MessageKey, Msg> = {
   // App
-  'app.title': 'Hansu · Chess Review',
-  'app.name': 'Hansu',
+  'app.title': 'Myosu · Chess Review',
+  'app.name': 'Myosu',
   'app.subtitle': 'Chess review · move stats by position',
   'app.sound': 'Move sound',
   'app.language': 'Language',

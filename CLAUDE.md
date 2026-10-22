@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 한수 (Hansu) — 체스 분석 프로그램
+## 묘수 (Myosu) — 체스 분석 프로그램
 
 이 프로그램은 체스닷컴(Chess.com), 리체스(Lichess.org) 등의 체스 플랫폼의 플레이어 대전 기록을 바탕으로, 플레이어의 체스 수순 통계와 체스 엔진 등의 분석을 통해 체스 복기를 도와주는 역할을 수행한다.
 

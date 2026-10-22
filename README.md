@@ -1,10 +1,10 @@
-# 한수 (Hansu)
+# 묘수 (Myosu)
 
-**Hansu** is a personal chess game-review tool. It imports your games from Chess.com and Lichess and shows, for any position, which moves *you* and *your opponents* actually played — drawn as arrows on the board, with win/draw/loss rates, Stockfish evaluations and opening names.
+**Myosu** is a personal chess game-review tool. It imports your games from Chess.com and Lichess and shows, for any position, which moves *you* and *your opponents* actually played — drawn as arrows on the board, with win/draw/loss rates, Stockfish evaluations and opening names.
 
 체스닷컴·리체스 대국 기록으로 **"이 포지션에서 나는 주로 뭘 뒀고, 상대들은 뭘 뒀는지"**를 보드 위 화살표로 보여주는 체스 복기 도구입니다.
 
-![한수 화면](docs/screenshot.png)
+![묘수 화면](docs/screenshot.png)
 
 ## 주요 기능
 
@@ -69,7 +69,7 @@ cd frontend && npm run typecheck
 | `USER_AGENT_CONTACT` | 체스닷컴·리체스 API 요청에 붙일 연락처 |
 | `PUBLIC_BASE_URL` | 앱 주소, OAuth 콜백에 사용. 기본 `http://localhost:5173` |
 | `SECRET_KEY` | 세션 쿠키 서명 키. 없으면 `backend/data/secret_key`에 생성 |
-| `LICHESS_CLIENT_ID` | 기본 `hansu` |
+| `LICHESS_CLIENT_ID` | 기본 `myosu` |
 | `CHESSCOM_CLIENT_ID` / `CHESSCOM_CLIENT_SECRET` | 체스닷컴 OAuth 승인 후 설정 |
 
 ## 데이터 출처
