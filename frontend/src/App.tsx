@@ -18,9 +18,7 @@ export function App() {
     <>
       <header className="app-header" onPointerDown={preloadSounds}>
         <h1 className="brand">
-          <span className="brand-mark" aria-hidden>
-            ♞
-          </span>
+          <img className="brand-mark" src="/favicon.svg" alt="" aria-hidden />
           {t('app.name')}
         </h1>
         <span className="muted">{t('app.subtitle')}</span>

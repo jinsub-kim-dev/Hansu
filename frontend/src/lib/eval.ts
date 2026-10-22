@@ -1,9 +1,55 @@
-import type { Classification } from '../api/client'
 import { translate } from '../i18n'
 
-/** centipawn → [-1, 1] 기대 승률 (백엔드 classify와 같은 식). */
+export type Classification = 'best' | 'good' | 'inaccuracy' | 'mistake' | 'blunder'
+
+export interface CandidateLine {
+  uci: string
+  san: string
+  cp: number // 백 기준
+  mate: number | null
+  pv_san: string[]
+}
+
+export interface EngineLine {
+  best_uci: string | null
+  best_san: string | null
+  cp: number // 백 기준
+  mate: number | null // 백 기준
+  pv_san: string[]
+  lines: CandidateLine[] // 엔진 후보 수 (좋은 순)
+}
+
+export interface MoveEval {
+  uci: string
+  san: string
+  cp: number // 수를 둔 뒤 백 기준
+  mate: number | null
+  cp_loss: number | null
+  win_chance_loss: number | null
+  classification: Classification | null
+}
+
+/** 포지션 평가(브라우저에서 계산, usePositionEval). */
+export interface PositionEval {
+  status: 'done' | 'pending' | 'failed' | 'unavailable'
+  message: string | null
+  depth: number | null
+  source: 'cloud' | 'local' | null // Lichess 클라우드 평가 / 브라우저 Stockfish
+  position: EngineLine | null
+  moves: MoveEval[]
+}
+
+/** centipawn → [-1, 1] 기대 승률 (Lichess와 같은 식). */
 export function winChance(cp: number): number {
   return 2 / (1 + Math.exp(-0.00368208 * cp)) - 1
+}
+
+/** 승률 손실(0~1)과 판정. 점수는 둘 다 수를 두는 쪽 기준. */
+export function classify(bestCp: number, moveCp: number, isBest: boolean): { loss: number; classification: Classification } {
+  const loss = Math.max(0, winChance(bestCp) - winChance(moveCp)) / 2
+  const classification: Classification =
+    isBest || loss < 0.01 ? 'best' : loss < 0.05 ? 'good' : loss < 0.1 ? 'inaccuracy' : loss < 0.15 ? 'mistake' : 'blunder'
+  return { loss, classification }
 }
 
 /** 백 기준 평가를 "+0.35" / "#3" / "#-2" 형식으로. */

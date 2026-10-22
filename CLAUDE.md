@@ -59,7 +59,15 @@ cd frontend && npm run typecheck
 
 ### 엔진 평가
 
-`GET /api/analysis/position?fen=...&moves=<uci>...`는 포지션의 엔진 후보 수(MultiPV, `position.lines`)와 주어진 수들의 평가를 돌려준다. `EngineEval.rank`는 포지션 행에서는 분석한 후보 수 개수, 수 행에서는 후보 순위다(rank 없는 옛 포지션 행은 다시 분석). 캐시(`EngineEval`, 포지션 키·수·깊이 단위)에 없으면 `AnalysisService`의 작업자 스레드(엔진 프로세스 1개)에 분석을 예약하고 `status=pending`을 돌려주며, 프론트엔드가 `done`이 될 때까지 폴링한다. 응답 점수는 백 기준이고, 수 분류(best/good/inaccuracy/mistake/blunder)는 Lichess식 기대 승률 손실로 매긴다(`analysis/engine.py`의 `classify`). `init_db`는 모델에 새로 생긴 nullable 컬럼을 기존 테이블에 `ALTER TABLE`로 추가한다(그 밖의 스키마 변경은 아직 마이그레이션 도구가 없다). 프론트엔드는 평가를 체스닷컴식 세로 평가 막대(`EvalBar`)와 후보 수 목록(`EnginePanel`)으로 보여준다. 테스트는 가짜 분석기를 쓰고, 실제 Stockfish 테스트는 엔진이 없으면 건너뛴다.
+화면의 엔진 평가는 **브라우저에서** 계산한다(`frontend/src/lib/usePositionEval.ts`). Render 무료 인스턴스는 CPU가 0.1개라 서버 분석이 수십 초 걸렸기 때문이다.
+1. Lichess 클라우드 평가(`lib/cloudEval.ts`, `GET https://lichess.org/api/cloud-eval`)에 목표 깊이 이상·후보 3개 이상인 결과가 있으면 바로 쓴다(404는 기억, 429면 1분 쉼).
+2. 없으면 Stockfish.js 18 lite 단일 스레드 WebAssembly(`public/engine/`, Web Worker, `lib/stockfish.ts`)로 MultiPV 3을 돌려 깊이마다 갱신한다. 목표 깊이는 데스크톱 18, 터치 기기 14.
+3. 통계에 나온 수 중 후보 수에 없는 수는 `go searchmoves <수>`로 그 수만 깊이 16(터치 12)까지 탐색해 판정한다(`lib/eval.ts`의 `classify`, 백엔드와 같은 Lichess식 기대 승률 손실).
+프론트엔드는 평가를 체스닷컴식 세로 평가 막대(`EvalBar`)와 후보 수 목록(`EnginePanel`, 출처가 클라우드인지 브라우저 엔진인지와 깊이 표시)으로 보여준다. 엔진은 탭마다 하나이고 탐색을 차례로 돌리며, 포지션을 옮기면 진행 중인 탐색을 `stop`한다. 결과는 탭이 열려 있는 동안 포지션 키별로 메모리에 둔다. 엔진 파일은 이름에 버전을 넣고 `vercel.json`에서 1년 캐시(immutable)로 내보낸다.
+
+아래 백엔드 엔진 API는 남아 있지만 지금 프론트엔드는 쓰지 않는다.
+
+`GET /api/analysis/position?fen=...&moves=<uci>...`는 포지션의 엔진 후보 수(MultiPV, `position.lines`)와 주어진 수들의 평가를 돌려준다. `EngineEval.rank`는 포지션 행에서는 분석한 후보 수 개수, 수 행에서는 후보 순위다(rank 없는 옛 포지션 행은 다시 분석). 캐시(`EngineEval`, 포지션 키·수·깊이 단위)에 없으면 `AnalysisService`의 작업자 스레드(엔진 프로세스 1개)에 분석을 예약하고 `status=pending`을 돌려주며, 클라이언트가 `done`이 될 때까지 폴링한다. 응답 점수는 백 기준이고, 수 분류(best/good/inaccuracy/mistake/blunder)는 Lichess식 기대 승률 손실로 매긴다(`analysis/engine.py`의 `classify`). `init_db`는 모델에 새로 생긴 nullable 컬럼을 기존 테이블에 `ALTER TABLE`로 추가한다(그 밖의 스키마 변경은 아직 마이그레이션 도구가 없다). 테스트는 가짜 분석기를 쓰고, 실제 Stockfish 테스트는 엔진이 없으면 건너뛴다.
 
 ### 계정 연결 (OAuth 로그인)
 
@@ -97,7 +105,7 @@ Vercel(프론트엔드, Root Directory `frontend`) + Render 무료 웹 서비스
 
 ### 설계 원칙
 
-- 외부 플랫폼 API는 백엔드에서만 호출한다. 프론트엔드는 백엔드 API만 호출한다(CORS 회피, 레이트 리밋과 캐싱을 한곳에서 관리).
+- 외부 플랫폼 API는 백엔드에서만 호출한다. 프론트엔드는 백엔드 API만 호출한다(CORS 회피, 레이트 리밋과 캐싱을 한곳에서 관리). 예외: Lichess 클라우드 평가는 방문자마다 자기 IP로 요청하도록 브라우저에서 직접 부른다(서버 한 곳에서 모으면 Lichess 요청 한도에 걸린다).
 - 새 플랫폼을 추가할 때는 `importers/`에 수집기를 하나 추가하고 공통 `Game` 모델로 바꿔 주기만 하면 된다. 분석·통계 코드는 수정하지 않는다.
 - Stockfish 실행 파일 경로, DB URL, User-Agent 연락처는 환경 변수로 설정한다.
 - 테스트에서는 외부 API 응답을 저장해 둔 fixture(PGN/JSON)로 대체하고, 실제 네트워크를 호출하지 않는다.

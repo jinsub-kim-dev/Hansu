@@ -6,3 +6,6 @@
 # 바이너리
 *.png binary
 *.mp3 binary
+*.wasm binary
+# 내려받은 엔진 파일은 그대로 둔다.
+frontend/public/engine/*.js -text

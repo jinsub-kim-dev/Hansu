@@ -1,5 +1,5 @@
 // 체스닷컴 분석 사이드바처럼 엔진 후보 수를 평가치와 수순으로 보여준다.
-import type { PositionEval } from '../api/client'
+import type { PositionEval } from '../lib/eval'
 import { useI18n } from '../i18n'
 import { formatEval } from '../lib/eval'
 
@@ -70,7 +70,10 @@ export function EnginePanel({ fen, evaluation, onPlay, onHover }: Props) {
         <h3 className="section-title">{t('engine.title')}</h3>
         <span className="section-meta">
           {evaluation?.status === 'pending' && <span className="spinner" aria-label={t('engine.analyzing')} />}
-          Stockfish{evaluation?.depth ? t('engine.depth', { depth: evaluation.depth }) : ''}
+          <span title={evaluation?.source === 'cloud' ? t('engine.sourceCloudTitle') : t('engine.sourceLocalTitle')}>
+            {evaluation?.source === 'cloud' ? t('engine.sourceCloud') : t('engine.sourceLocal')}
+            {evaluation?.depth ? t('engine.depth', { depth: evaluation.depth }) : ''}
+          </span>
         </span>
       </header>
       <div className="section-body">{body}</div>

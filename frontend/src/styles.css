@@ -518,17 +518,7 @@ button.secondary { background: transparent; color: var(--text); border-color: va
 
 /* 앱 헤더 로고 */
 .brand { display: flex; align-items: center; gap: 10px; }
-.brand-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, var(--c-teal), var(--c-blue) 55%, var(--c-violet));
-  color: #fff;
-  font-size: 1.05rem;
-}
+.brand-mark { width: 28px; height: 28px; display: block; } /* public/favicon.svg와 같은 아이콘 */
 
 /* 오프닝(청록) */
 .status-badge.good { background: color-mix(in srgb, var(--c-teal) 16%, transparent); color: var(--c-teal); }

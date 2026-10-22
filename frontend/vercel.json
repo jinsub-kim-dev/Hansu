@@ -9,5 +9,16 @@
       "source": "/api/:path*",
       "destination": "https://myosu-api.onrender.com/api/:path*"
     }
+  ],
+  "headers": [
+    {
+      "source": "/engine/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
   ]
 }

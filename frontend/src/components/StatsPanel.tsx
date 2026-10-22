@@ -1,7 +1,8 @@
 // 오른쪽 사이드바의 "다음 수 통계" 카드: 내 진영·필터 도구 막대, 내 수/상대 수 탭, 수 목록.
 import { useState } from 'react'
 import { defaultPieces } from 'react-chessboard'
-import type { Color, MoveEval, PlayerSummary, PositionMoveStats } from '../api/client'
+import type { Color, PlayerSummary, PositionMoveStats } from '../api/client'
+import type { MoveEval } from '../lib/eval'
 import { useI18n } from '../i18n'
 import { moveColor } from '../lib/eval'
 import { MoveStatsTable } from './MoveStatsTable'

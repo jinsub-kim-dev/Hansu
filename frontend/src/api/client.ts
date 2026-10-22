@@ -143,49 +143,6 @@ export function getPositionMoves(q: PositionQuery, signal?: AbortSignal): Promis
   return request(`/stats/position-moves?${params}`, { signal })
 }
 
-export type Classification = 'best' | 'good' | 'inaccuracy' | 'mistake' | 'blunder'
-
-export interface CandidateLine {
-  uci: string
-  san: string
-  cp: number // 백 기준
-  mate: number | null
-  pv_san: string[]
-}
-
-export interface EngineLine {
-  best_uci: string | null
-  best_san: string | null
-  cp: number // 백 기준
-  mate: number | null // 백 기준
-  pv_san: string[]
-  lines: CandidateLine[] // 엔진 후보 수 (좋은 순)
-}
-
-export interface MoveEval {
-  uci: string
-  san: string
-  cp: number // 수를 둔 뒤 백 기준
-  mate: number | null
-  cp_loss: number | null
-  win_chance_loss: number | null
-  classification: Classification | null
-}
-
-export interface PositionEval {
-  status: 'done' | 'pending' | 'failed' | 'unavailable'
-  message: string | null
-  depth: number | null
-  position: EngineLine | null
-  moves: MoveEval[]
-}
-
-export function getPositionEval(fen: string, moves: string[], signal?: AbortSignal): Promise<PositionEval> {
-  const params = new URLSearchParams({ fen })
-  for (const m of moves) params.append('moves', m)
-  return request(`/analysis/position?${params}`, { signal })
-}
-
 export interface Opening {
   eco: string
   name: string

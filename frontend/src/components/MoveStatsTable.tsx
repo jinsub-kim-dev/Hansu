@@ -1,4 +1,5 @@
-import type { MoveEval, MoveStatGroup } from '../api/client'
+import type { MoveStatGroup } from '../api/client'
+import type { MoveEval } from '../lib/eval'
 import { useI18n } from '../i18n'
 import { CLASSIFICATION, classificationLabel, formatEval } from '../lib/eval'
 
