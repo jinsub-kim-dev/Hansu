@@ -61,8 +61,8 @@ main { padding: 16px; }
 /* 왼쪽 사이드(고정 폭) · 보드(화면 높이에 맞춘 정사각형) · 오른쪽 사이드(남은 폭 전부, 보드와 같은 높이) */
 .layout {
   --gap: 16px;
-  --left: 340px;
-  --right-min: 300px;
+  --left: clamp(300px, 21vw, 330px); /* 좁은 화면에서는 300px까지 줄여 보드 자리를 지킨다 */
+  --right-min: 320px; /* 다음 수 통계 표가 잘리지 않는 최소 폭 */
   --evalbar: 28px;
   --board: min(
     calc(100vh - 90px),
@@ -165,8 +165,8 @@ button.secondary { background: transparent; color: var(--text); border-color: va
 
 
 .move-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-.move-table th { text-align: left; color: var(--muted); font-weight: 500; font-size: 0.75rem; padding: 6px 5px; border-bottom: 1px solid var(--hairline); }
-.move-table td { padding: 8px 5px; border-bottom: 1px solid var(--hairline); }
+.move-table th { text-align: left; color: var(--muted); font-weight: 500; font-size: 0.75rem; padding: 6px 4px; border-bottom: 1px solid var(--hairline); }
+.move-table td { padding: 8px 4px; border-bottom: 1px solid var(--hairline); }
 .move-table th:first-child, .move-table td:first-child { padding-left: 2px; }
 .move-table th:last-child, .move-table td:last-child { padding-right: 2px; }
 .move-table tbody tr { cursor: pointer; }
@@ -176,7 +176,7 @@ button.secondary { background: transparent; color: var(--text); border-color: va
 .move-table .san { font-weight: 600; white-space: nowrap; }
 .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; }
 
-.wdl { display: flex; height: 16px; border-radius: 3px; overflow: hidden; min-width: 72px; font-size: 0.72rem; }
+.wdl { display: flex; height: 16px; border-radius: 3px; overflow: hidden; min-width: 64px; font-size: 0.72rem; }
 .wdl span { display: flex; align-items: center; justify-content: center; color: #fff; flex-basis: 0; overflow: hidden; }
 .wdl .w { background: var(--win); }
 .wdl .d { background: var(--draw); }
@@ -260,7 +260,7 @@ button.secondary { background: transparent; color: var(--text); border-color: va
 
 .eval-cell { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
 /* 평가 칩과 분류 배지는 같은 높이로 맞추고 내용은 상자 정가운데에 둔다. */
-.move-table .eval-chip { display: inline-flex; align-items: center; justify-content: center; height: 18px; min-width: 52px; font-size: 0.78rem; line-height: 1; padding: 0 4px; }
+.move-table .eval-chip { display: inline-flex; align-items: center; justify-content: center; height: 18px; min-width: 46px; font-size: 0.78rem; line-height: 1; padding: 0 4px; }
 .cls-badge { display: inline-flex; align-items: center; justify-content: center; height: 18px; min-width: 22px; padding: 0 4px; border-radius: 4px; color: #fff; font-size: 0.72rem; font-weight: 700; line-height: 1; }
 .cls-best { background: #2fa34a; }
 .cls-good { background: #6f9f5f; }
