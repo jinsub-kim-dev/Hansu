@@ -107,3 +107,18 @@ def test_invalid_input(client):
         params={"platform": "chesscom", "username": "testuser", "fen": "garbage"},
     )
     assert resp.status_code == 422
+
+
+def test_health(client):
+    assert client.get("/api/health").json() == {"ok": True}
+
+
+def test_import_rate_limit(client):
+    from app.ratelimit import RateLimiter
+
+    client.app.state.import_limiter = RateLimiter(2, 3600)
+    assert client.post("/api/players/chesscom/testuser/import").status_code in (200, 202)
+    assert client.post("/api/players/chesscom/testuser/import").status_code in (200, 202)
+    resp = client.post("/api/players/chesscom/testuser/import", headers={"Accept-Language": "en"})
+    assert resp.status_code == 429
+    assert resp.json()["code"] == "too_many_imports"

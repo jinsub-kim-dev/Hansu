@@ -1,3 +1,8 @@
+import os
+
+# backend/.env(실제 DB 주소)를 읽기 전에 테스트용 주소를 정해, 테스트가 외부 DB에 닿지 않게 한다.
+os.environ["DATABASE_URL"] = "sqlite://"
+
 import json
 from pathlib import Path
 

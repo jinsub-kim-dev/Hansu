@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import Index, UniqueConstraint
+from sqlalchemy import BigInteger, Index, UniqueConstraint
 from sqlmodel import Field, SQLModel
 
 
@@ -26,17 +26,19 @@ class Game(SQLModel, table=True):
 
 
 class PositionMove(SQLModel, table=True):
-    """대국의 각 수를 '수를 두기 전 포지션'과 함께 저장한 색인. 포지션별 수순 통계에 쓴다."""
+    """대국의 각 수를 '수를 두기 전 포지션'과 함께 저장한 색인. 포지션별 수순 통계에 쓴다.
 
-    __table_args__ = (Index("ix_positionmove_key_game", "position_key", "game_id"),)
+    대국당 수십 줄이 쌓이는 가장 큰 테이블이라 작게 저장한다: 포지션은 FEN 문자열 대신
+    64비트 해시(positions.position_hash), 수는 UCI만 두고 SAN은 조회할 때 포지션에서 만든다.
+    """
 
-    id: int | None = Field(default=None, primary_key=True)
-    game_id: int = Field(foreign_key="game.id", index=True, ondelete="CASCADE")
-    ply: int  # 1 = 백의 첫 수
-    position_key: str  # 수를 두기 전 포지션의 정규화된 FEN (수 카운터 제외)
-    color: str  # 수를 둔 쪽: "white" / "black"
+    __table_args__ = (Index("ix_positionmove_hash_game", "position_hash", "game_id"),)
+
+    game_id: int = Field(foreign_key="game.id", primary_key=True, ondelete="CASCADE")
+    ply: int = Field(primary_key=True)  # 1 = 백의 첫 수
+    position_hash: int = Field(sa_type=BigInteger)  # 수를 두기 전 포지션 키의 해시
+    white_to_move: bool  # 수를 둔 쪽이 백인지
     uci: str
-    san: str
 
 
 class Player(SQLModel, table=True):

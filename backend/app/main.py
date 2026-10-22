@@ -14,6 +14,7 @@ from app.auth.providers import ChessComOAuth, LichessOAuth, OAuthProvider
 from app.config import settings
 from app.db import engine, init_db
 from app.i18n import AppError, get_lang
+from app.ratelimit import RateLimiter
 from app.importers import chesscom, lichess
 from app.importers.jobs import ImportJobManager
 
@@ -83,6 +84,7 @@ def create_app(
     )
     app.state.analysis_service = analysis_service
     app.state.auth_providers = auth_providers or _default_auth_providers()
+    app.state.import_limiter = RateLimiter(settings.import_rate_limit_per_hour, 3600)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
@@ -104,6 +106,11 @@ def create_app(
             status_code=exc.status_code,
             content={"detail": exc.message(get_lang(request)), "code": exc.code},
         )
+
+    @app.get("/api/health", include_in_schema=False)
+    def health():
+        """배포 환경의 상태 확인용."""
+        return {"ok": True}
 
     app.include_router(players.router, prefix="/api")
     app.include_router(auth.router, prefix="/api")

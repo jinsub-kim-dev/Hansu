@@ -1,5 +1,6 @@
 """PGN/FEN 파싱과 포지션 정규화."""
 
+import hashlib
 import io
 from dataclasses import dataclass
 
@@ -19,6 +20,16 @@ def position_key(board: chess.Board) -> str:
     앙파상 칸은 실제로 앙파상이 가능할 때만 포함한다.
     """
     return " ".join(board.fen(en_passant="legal").split(" ")[:4])
+
+
+def position_hash(key: str) -> int:
+    """포지션 키의 64비트 해시(부호 있는 정수, DB BIGINT에 그대로 들어간다)."""
+    return int.from_bytes(hashlib.blake2b(key.encode("ascii"), digest_size=8).digest(), "big", signed=True)
+
+
+def board_from_key(key: str) -> chess.Board:
+    """포지션 키(FEN 앞 4필드)로 보드를 만든다."""
+    return chess.Board(f"{key} 0 1")
 
 
 @dataclass(frozen=True)

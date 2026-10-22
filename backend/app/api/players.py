@@ -52,11 +52,16 @@ def start_import(
     username: str,
     background: BackgroundTasks,
     response: Response,
+    request: Request,
     jobs: ImportJobManager = Depends(get_job_manager),
     lang: Lang = Depends(get_lang),
 ):
     """플레이어의 대국을 백그라운드에서 가져온다. 진행 상황은 /import-jobs/{id}로 조회한다."""
     username = _check_username(platform, username)
+    # 외부 API를 대신 호출하는 엔드포인트라 IP마다 새 작업 수를 제한한다.
+    client = request.client.host if request.client else "unknown"
+    if not request.app.state.import_limiter.allow(client):
+        raise AppError("too_many_imports", status_code=429)
     job, created = jobs.create(platform, username)
     if created:
         background.add_task(jobs.run, job.id)

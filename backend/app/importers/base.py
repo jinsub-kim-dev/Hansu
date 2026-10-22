@@ -7,7 +7,9 @@ from datetime import UTC, datetime
 
 from sqlmodel import Session, func, or_, select
 
-from app.analysis.positions import extract_moves
+from sqlalchemy import Engine
+
+from app.analysis.positions import MoveRecord, extract_moves, position_hash
 from app.i18n import AppError
 from app.models.db import Game, Player, PositionMove
 
@@ -118,16 +120,42 @@ def store_games(session: Session, games: Iterable[NormalizedGame]) -> int:
         game = Game(**ng.__dict__)
         session.add(game)
         session.flush()
-        session.add_all(
-            PositionMove(
-                game_id=game.id,
-                ply=m.ply,
-                position_key=m.position_key,
-                color=m.color,
-                uci=m.uci,
-                san=m.san,
-            )
-            for m in moves
-        )
+        session.add_all(_index_rows(game.id, moves))
         added += 1
     return added
+
+
+def _index_rows(game_id: int, moves: list[MoveRecord]) -> list[PositionMove]:
+    return [
+        PositionMove(
+            game_id=game_id,
+            ply=m.ply,
+            position_hash=position_hash(m.position_key),
+            white_to_move=m.color == "white",
+            uci=m.uci,
+        )
+        for m in moves
+    ]
+
+
+def rebuild_position_index(engine: Engine, batch: int = 500) -> int:
+    """저장된 모든 대국의 PGN으로 포지션 색인을 다시 만든다. 다시 만든 대국 수를 돌려준다."""
+    done = 0
+    last_id = 0
+    while True:
+        with Session(engine) as session:
+            rows = session.exec(
+                select(Game.id, Game.pgn).where(Game.id > last_id).order_by(Game.id).limit(batch)
+            ).all()
+            if not rows:
+                break
+            for game_id, pgn in rows:
+                try:
+                    session.add_all(_index_rows(game_id, extract_moves(pgn)))
+                except Exception:
+                    log.warning("PGN 파싱 실패(색인 재생성): game %s", game_id, exc_info=True)
+            session.commit()
+            done += len(rows)
+            last_id = rows[-1][0]
+            log.info("포지션 색인 다시 만드는 중: %d국", done)
+    return done

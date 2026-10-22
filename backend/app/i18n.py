@@ -49,6 +49,10 @@ MESSAGES: dict[str, dict[str, str]] = {
         "ko": "대국을 가져오는 중 오류가 발생했습니다.",
         "en": "Something went wrong while importing games.",
     },
+    "too_many_imports": {
+        "ko": "가져오기 요청이 너무 많습니다. 잠시 뒤 다시 시도하세요.",
+        "en": "Too many import requests. Please try again later.",
+    },
     "job_not_found": {"ko": "작업을 찾을 수 없습니다.", "en": "Import job not found."},
     "player_not_imported": {"ko": "아직 가져오지 않은 플레이어입니다.", "en": "This player has not been imported yet."},
     # 로그인

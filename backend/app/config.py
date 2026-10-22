@@ -4,6 +4,11 @@ import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+# backend/.env가 있으면 읽는다(이미 설정된 환경 변수가 우선). 비밀 값은 이 파일이나 배포 환경 변수에 둔다.
+load_dotenv(Path(__file__).resolve().parent.parent / ".env", override=False)
+
 # 기본 DB는 실행 위치와 무관하게 항상 backend/data/chess.db에 둔다.
 DEFAULT_DB_PATH = Path(__file__).resolve().parent.parent / "data" / "chess.db"
 SECRET_KEY_FILE = DEFAULT_DB_PATH.parent / "secret_key"
@@ -32,6 +37,8 @@ class Settings:
     stockfish_path: str = field(default_factory=lambda: os.getenv("STOCKFISH_PATH", ""))
     # 처음 가져올 때 받는 기간(년). 이후 업데이트는 마지막 대국 이후만 받는다.
     import_history_years: int = field(default_factory=lambda: int(os.getenv("IMPORT_HISTORY_YEARS", "3")))
+    # IP 하나가 한 시간에 새로 시작할 수 있는 가져오기 작업 수 (0이면 제한 없음)
+    import_rate_limit_per_hour: int = field(default_factory=lambda: int(os.getenv("IMPORT_RATE_LIMIT_PER_HOUR", "20")))
     engine_depth: int = field(default_factory=lambda: int(os.getenv("ENGINE_DEPTH", "18")))
     engine_threads: int = field(
         default_factory=lambda: int(os.getenv("ENGINE_THREADS", str(max(1, (os.cpu_count() or 2) // 2))))

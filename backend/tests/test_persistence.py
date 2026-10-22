@@ -88,3 +88,31 @@ def test_init_db_backfills_players_from_archives(engine, fake_chesscom):
         player = s.exec(select(Player)).one()
         assert player.username == "testuser"
         assert player.last_imported_at is not None
+
+
+def test_legacy_position_index_is_rebuilt(engine, fake_chesscom):
+    """FEN 문자열로 저장하던 옛 색인은 지우고 대국 PGN으로 새 형식 색인을 다시 만든다."""
+    from sqlalchemy import text
+
+    from app.analysis.positions import board_from_input, position_key
+    from app.analysis.stats import position_move_stats
+
+    import_player(engine, "testuser", fake_chesscom.client(), now=lambda: NOW)
+    start = position_key(board_from_input())
+    with Session(engine) as s:
+        before = position_move_stats(s, "chesscom", "testuser", start)
+
+    # 옛 형식 테이블로 바꿔 놓는다.
+    with engine.begin() as conn:
+        conn.execute(text("DROP TABLE positionmove"))
+        conn.execute(text(
+            "CREATE TABLE positionmove (id INTEGER PRIMARY KEY, game_id INTEGER, ply INTEGER, "
+            "position_key VARCHAR, color VARCHAR, uci VARCHAR, san VARCHAR)"
+        ))
+
+    init_db(engine)
+
+    with Session(engine) as s:
+        after = position_move_stats(s, "chesscom", "testuser", start)
+    assert after == before
+    assert after.player.total == 3

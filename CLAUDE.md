@@ -53,7 +53,9 @@ cd frontend && npm install && npm run dev                                  # htt
 cd frontend && npm run typecheck
 ```
 
-환경 변수: `DATABASE_URL`(기본 `backend/data/chess.db`, 실행 위치와 무관), `USER_AGENT_CONTACT`, `CORS_ORIGINS`, `IMPORT_HISTORY_YEARS`(처음 가져올 기간, 기본 3), `SECRET_KEY`, `PUBLIC_BASE_URL`, `LICHESS_CLIENT_ID`, `CHESSCOM_CLIENT_ID`/`CHESSCOM_CLIENT_SECRET`, `STOCKFISH_PATH`(비어 있으면 PATH의 `stockfish`), `ENGINE_DEPTH`(기본 18), `ENGINE_MULTIPV`(엔진 후보 수 개수, 기본 3), `ENGINE_THREADS`(기본 CPU 절반), `ENGINE_HASH_MB`(기본 128).
+환경 변수는 `backend/.env`(커밋하지 않음)에 둘 수 있고, 이미 설정된 환경 변수가 우선한다. 테스트는 `conftest.py`가 `DATABASE_URL=sqlite://`를 먼저 정해 외부 DB에 닿지 않는다.
+
+환경 변수: `DATABASE_URL`(기본 `backend/data/chess.db`, 실행 위치와 무관. `postgresql://`이면 psycopg 드라이버로 바꿔 작은 연결 풀로 연결), `USER_AGENT_CONTACT`, `CORS_ORIGINS`, `IMPORT_HISTORY_YEARS`(처음 가져올 기간, 기본 3), `IMPORT_RATE_LIMIT_PER_HOUR`(IP당 새 가져오기 작업 수, 기본 20), `SECRET_KEY`, `PUBLIC_BASE_URL`, `LICHESS_CLIENT_ID`, `CHESSCOM_CLIENT_ID`/`CHESSCOM_CLIENT_SECRET`, `STOCKFISH_PATH`(비어 있으면 PATH의 `stockfish`), `ENGINE_DEPTH`(기본 18), `ENGINE_MULTIPV`(엔진 후보 수 개수, 기본 3), `ENGINE_THREADS`(기본 CPU 절반), `ENGINE_HASH_MB`(기본 128).
 
 ### 엔진 평가
 
@@ -79,7 +81,11 @@ cd frontend && npm run typecheck
 
 ### 포지션 수순 통계
 
-수집할 때 각 대국의 모든 수를 `PositionMove`(수를 두기 전 포지션 키 + 둔 수)로 색인해 둔다. 포지션 키는 FEN에서 수 카운터를 뺀 앞 4필드(앙파상은 실제로 가능할 때만)라서 트랜스포지션은 같은 포지션으로 합쳐진다. `GET /api/stats/position-moves`는 포지션(FEN 또는 PGN)에서 플레이어 본인이 둔 수(`player`)와 상대들이 둔 수(`opponent`)를 승/무/패(플레이어 기준)와 함께 돌려준다. 필터: `time_class`(여러 번 가능), `color`, `since`/`until`(대국이 끝난 시각, ISO 8601·시간대 포함, until 미포함). 프론트엔드는 통계 패널 상단의 "내 진영"(기본 백)을 보드 아래쪽 진영이자 `color` 필터로 쓰고, 현재 차례가 내 진영이면 "내가 둔 수", 아니면 "상대들이 둔 수" 탭을 연다(내 진영 대국만 세므로 다른 탭은 항상 비어 있어 비활성화한다). 기간 필터(`PeriodFilter`)는 전체 기간 또는 현지 날짜 기준 시작일~종료일(양 끝 포함)을 고르고 이를 since/until로 바꿔 보낸다. 프론트엔드는 이를 빈도에 비례한 두께, 엔진 판정에 따른 색(최선·좋음 초록, 부정확·실수 노랑, 블런더 빨강, 평가 전 회색, `lib/eval.ts`의 `moveColor`)의 SVG 화살표로 보드 위에 그린다. 엔진 최선 수는 보라색 점선이다(`components/MoveArrows.tsx`, react-chessboard 기본 화살표는 화살표별 두께를 지원하지 않음).
+수집할 때 각 대국의 모든 수를 `PositionMove`(수를 두기 전 포지션 키의 64비트 해시 `position_hash` + 둔 수 UCI + 둔 쪽)로 색인해 둔다. 가장 큰 테이블이라 FEN 문자열과 SAN은 저장하지 않고, SAN은 조회할 때 포지션 키(`board_from_key`)로 만든다. 옛 형식(FEN 문자열) 색인은 `init_db`가 지우고 대국 PGN으로 다시 만든다(`rebuild_position_index`). 포지션 키는 FEN에서 수 카운터를 뺀 앞 4필드(앙파상은 실제로 가능할 때만)라서 트랜스포지션은 같은 포지션으로 합쳐진다. `GET /api/stats/position-moves`는 포지션(FEN 또는 PGN)에서 플레이어 본인이 둔 수(`player`)와 상대들이 둔 수(`opponent`)를 승/무/패(플레이어 기준)와 함께 돌려준다. 필터: `time_class`(여러 번 가능), `color`, `since`/`until`(대국이 끝난 시각, ISO 8601·시간대 포함, until 미포함). 프론트엔드는 통계 패널 상단의 "내 진영"(기본 백)을 보드 아래쪽 진영이자 `color` 필터로 쓰고, 현재 차례가 내 진영이면 "내가 둔 수", 아니면 "상대들이 둔 수" 탭을 연다(내 진영 대국만 세므로 다른 탭은 항상 비어 있어 비활성화한다). 기간 필터(`PeriodFilter`)는 전체 기간 또는 현지 날짜 기준 시작일~종료일(양 끝 포함)을 고르고 이를 since/until로 바꿔 보낸다. 프론트엔드는 이를 빈도에 비례한 두께, 엔진 판정에 따른 색(최선·좋음 초록, 부정확·실수 노랑, 블런더 빨강, 평가 전 회색, `lib/eval.ts`의 `moveColor`)의 SVG 화살표로 보드 위에 그린다. 엔진 최선 수는 보라색 점선이다(`components/MoveArrows.tsx`, react-chessboard 기본 화살표는 화살표별 두께를 지원하지 않음).
+
+### 배포
+
+Vercel(프론트엔드, Root Directory `frontend`) + Render 무료 웹 서비스(백엔드 Docker, `backend/Dockerfile`에 Stockfish 포함, 15분 미사용 시 잠듦) + Supabase 무료 Postgres(500MB, Session pooler 주소, Data API 끔). `frontend/vercel.json`이 `/api/*`를 Render 백엔드로 넘겨, OAuth 콜백과 세션 쿠키가 프론트엔드 주소(`PUBLIC_BASE_URL`)에 붙는다. 상태 확인은 `/api/health`. 진행 중인 가져오기 작업 상태는 메모리에 있어 백엔드가 잠들면 사라진다(대국 데이터는 DB에 남음).
 
 ### 데이터 흐름
 

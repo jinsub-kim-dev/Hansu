@@ -4,9 +4,11 @@ from collections.abc import Sequence
 from datetime import UTC, datetime
 from dataclasses import dataclass, field
 
+import chess
 from sqlalchemy import case, distinct, func, or_
 from sqlmodel import Session, select
 
+from app.analysis.positions import board_from_key, position_hash
 from app.models.db import Game, Player, PositionMove
 
 
@@ -57,23 +59,23 @@ def position_move_stats(
     한 대국에서 같은 포지션이 반복돼도 수마다 대국 하나로 센다.
     """
     username = username.lower()
+    board = board_from_key(position_key)
     pc = case((Game.white == username, "white"), else_="black").label("player_color")
     stmt = (
         select(
             PositionMove.uci,
-            func.min(PositionMove.san),
-            PositionMove.color,
+            PositionMove.white_to_move,
             pc,
             Game.result,
             func.count(distinct(PositionMove.game_id)),
         )
         .join(Game, Game.id == PositionMove.game_id)
         .where(
-            PositionMove.position_key == position_key,
+            PositionMove.position_hash == position_hash(position_key),
             Game.platform == platform,
             or_(Game.white == username, Game.black == username),
         )
-        .group_by(PositionMove.uci, PositionMove.color, pc, Game.result)
+        .group_by(PositionMove.uci, PositionMove.white_to_move, pc, Game.result)
     )
     if time_classes:
         stmt = stmt.where(Game.time_class.in_(time_classes))
@@ -87,9 +89,13 @@ def position_move_stats(
         stmt = stmt.where(Game.black == username)
 
     buckets: dict[str, dict[str, MoveStat]] = {"player": {}, "opponent": {}}
-    for uci, san, mover, p_color, result, count in session.exec(stmt).all():
+    for uci, white_to_move, p_color, result, count in session.exec(stmt).all():
+        move = chess.Move.from_uci(uci)
+        if move not in board.legal_moves:  # 해시 충돌 등으로 이 포지션의 수가 아니면 버린다
+            continue
+        mover = "white" if white_to_move else "black"
         side = "player" if mover == p_color else "opponent"
-        stat = buckets[side].setdefault(uci, MoveStat(uci=uci, san=san))
+        stat = buckets[side].setdefault(uci, MoveStat(uci=uci, san=board.san(move)))
         stat.games += count
         match _outcome(result, p_color):
             case "win":

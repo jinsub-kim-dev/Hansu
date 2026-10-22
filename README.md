@@ -58,14 +58,25 @@ cd backend && uv run pytest
 cd frontend && npm run typecheck
 ```
 
+### 배포
+
+| 역할 | 서비스 | 설정 |
+|---|---|---|
+| 화면 | Vercel | Root Directory `frontend`. `frontend/vercel.json`이 `/api/*`를 백엔드로 넘긴다 |
+| 백엔드 | Render (Docker) | Root Directory `backend`, `backend/Dockerfile`(Stockfish 포함). 상태 확인 `/api/health` |
+| DB | Supabase Postgres | `DATABASE_URL`에 Session pooler 주소. Data API는 끈다 |
+
+로컬에서는 `backend/.env`(커밋하지 않음)에 `DATABASE_URL` 등을 적으면 읽는다. 없으면 SQLite(`backend/data/chess.db`)를 쓴다.
+
 ### 환경 변수 (모두 선택)
 
 | 이름 | 설명 |
 |---|---|
-| `DATABASE_URL` | 기본 `backend/data/chess.db` |
+| `DATABASE_URL` | 기본 `backend/data/chess.db`. Postgres(`postgresql://...`)도 가능 |
 | `STOCKFISH_PATH` | 비어 있으면 PATH에서 찾음 |
 | `ENGINE_DEPTH` / `ENGINE_MULTIPV` / `ENGINE_THREADS` / `ENGINE_HASH_MB` | 엔진 설정 (기본 18 / 3 / CPU 절반 / 128) |
 | `IMPORT_HISTORY_YEARS` | 처음 가져올 기간(년), 기본 3 |
+| `IMPORT_RATE_LIMIT_PER_HOUR` | IP당 시간당 새 가져오기 작업 수, 기본 20 (0이면 제한 없음) |
 | `USER_AGENT_CONTACT` | 체스닷컴·리체스 API 요청에 붙일 연락처 |
 | `PUBLIC_BASE_URL` | 앱 주소, OAuth 콜백에 사용. 기본 `http://localhost:5173` |
 | `SECRET_KEY` | 세션 쿠키 서명 키. 없으면 `backend/data/secret_key`에 생성 |

@@ -4,6 +4,7 @@ import pytest
 from sqlmodel import Session, func, select
 
 from app.importers.base import ImporterError, PlayerNotFound
+from app.analysis.positions import position_hash
 from app.importers.chesscom import import_player, is_final_archive, parse_game
 from app.models.db import ArchiveFetch, Game, PositionMove
 from tests.conftest import load_fixture
@@ -49,9 +50,10 @@ def test_import_stores_games_and_positions(engine, fake_chesscom):
         moves = s.exec(
             select(PositionMove).where(PositionMove.game_id == g1.id).order_by(PositionMove.ply)
         ).all()
-        assert [m.san for m in moves] == ["e4", "e5", "Nf3", "Nc6", "Bb5", "a6"]
-        assert moves[0].position_key == "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"
-        assert moves[1].color == "black"
+        assert [m.uci for m in moves] == ["e2e4", "e7e5", "g1f3", "b8c6", "f1b5", "a7a6"]
+        start = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"
+        assert moves[0].position_hash == position_hash(start)
+        assert (moves[0].white_to_move, moves[1].white_to_move) == (True, False)
 
 
 def test_update_fetches_only_since_last_game(engine, fake_chesscom):
