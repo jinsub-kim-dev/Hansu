@@ -45,7 +45,7 @@ export const en: Record<MessageKey, Msg> = {
   'account.import': 'Import',
   'account.unlink': 'Unlink',
   'account.unlinkConfirm': (p: Params) =>
-    `Unlink your ${p.platform} account? Games you already imported will be kept.`,
+    `Unlink your ${p.platform} account? If it is your last account you will be signed out. Imported games and review notes are kept and come back when you link the same account again.`,
   'account.connect': (p: Params) => `Connect ${p.platform}`,
   'account.pending': 'Chess.com sign-in is awaiting approval. You can connect once it is approved.',
   'account.hint': (p: Params) =>
@@ -174,6 +174,18 @@ export const en: Record<MessageKey, Msg> = {
   'period.from': 'Start date',
   'period.to': 'End date',
 
+  'empty.connectTitle': 'Connect an account',
+  'empty.gamesConnect': 'Connect your Lichess account to import your games automatically and replay recent games here move by move.',
+  'empty.reviewsConnect': 'Connect an account to save positions you went wrong in and keep dated review notes.',
+  'empty.chesscomPending': 'Chess.com sign-in is awaiting approval.',
+  'empty.noGamesTitle': 'No games imported yet',
+  'empty.noGamesDesc': 'If you just connected your account, your games may still be importing. Check progress or start an import under "My accounts" on the Explore screen.',
+  'empty.goImport': 'Import from My accounts',
+  'empty.noReviewsTitle': 'No saved positions yet',
+  'empty.goGames': 'Browse recent games',
+  'empty.goExplore': 'Go to Explore',
+  'empty.resetFilters': 'Reset filters',
+  'empty.waking': 'If the server was asleep, it can take up to a minute to wake up.',
   // Navigation
   'nav.explore': 'Explore',
   'nav.reviews': 'Review notes',
@@ -238,7 +250,7 @@ export const en: Record<MessageKey, Msg> = {
   'review.tag.endgame': 'Endgame',
   'review.tag.time': 'Time trouble',
   'reviews.loading': 'Loading…',
-  'reviews.empty': 'No saved positions yet. Use "Save this position" on the Explore screen or ☆ in the stats table.',
+  'reviews.empty': 'While replaying a game, press "Save this position" where you went wrong, or use ☆ in the stats table.',
   'reviews.noMatch': 'No notes match these filters.',
   'reviews.open': 'Open this position on the Explore screen',
   'reviews.noMyMove': 'No move recorded',

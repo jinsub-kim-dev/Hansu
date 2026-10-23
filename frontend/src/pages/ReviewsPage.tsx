@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Chessboard } from 'react-chessboard'
 import { ApiError, listReviews, type Color, type Review } from '../api/client'
+import { ConnectAccountState, EmptyState, LoadingState } from '../components/EmptyState'
 import { MoveArrows } from '../components/MoveArrows'
 import { sanOf } from '../components/ReviewPanel'
 import { useI18n } from '../i18n'
@@ -10,6 +11,7 @@ import { CLASSIFICATION, classificationLabel, moveColor, QUALITY_COLORS } from '
 interface Props {
   active: boolean
   onOpen: (review: Review) => void
+  onGo: (view: 'explore' | 'games') => void // 빈 화면에서 다른 탭으로 안내
 }
 
 type Status = 'all' | 'todo' | 'done'
@@ -48,7 +50,7 @@ function MiniBoard({ review }: { review: Review }) {
   )
 }
 
-export function ReviewsPage({ active, onOpen }: Props) {
+export function ReviewsPage({ active, onOpen, onGo }: Props) {
   const { t, formatDate } = useI18n()
   const [reviews, setReviews] = useState<Review[] | null>(null)
   const [loginRequired, setLoginRequired] = useState(false)
@@ -90,15 +92,49 @@ export function ReviewsPage({ active, onOpen }: Props) {
 
   let body: React.ReactNode
   if (loginRequired) {
-    body = <p className="reviews-empty muted">{t('review.loginHint')}</p>
+    body = <ConnectAccountState description={t('empty.reviewsConnect')} />
   } else if (error) {
     body = <p className="error">{error}</p>
   } else if (!reviews) {
-    body = <p className="reviews-empty muted">{t('reviews.loading')}</p>
+    body = <LoadingState />
   } else if (reviews.length === 0) {
-    body = <p className="reviews-empty muted">{t('reviews.empty')}</p>
+    body = (
+      <EmptyState
+        icon="reviews"
+        tone="rose"
+        title={t('empty.noReviewsTitle')}
+        actions={
+          <>
+            <button onClick={() => onGo('games')}>{t('empty.goGames')}</button>
+            <button className="secondary" onClick={() => onGo('explore')}>
+              {t('empty.goExplore')}
+            </button>
+          </>
+        }
+      >
+        {t('reviews.empty')}
+      </EmptyState>
+    )
   } else if (shown.length === 0) {
-    body = <p className="reviews-empty muted">{t('reviews.noMatch')}</p>
+    body = (
+      <EmptyState
+        icon="search"
+        tone="muted"
+        title={t('reviews.noMatch')}
+        actions={
+          <button
+            className="secondary"
+            onClick={() => {
+              setStatus('all')
+              setColor('all')
+              setTag('')
+            }}
+          >
+            {t('empty.resetFilters')}
+          </button>
+        }
+      />
+    )
   } else {
     body = (
       <ul className="review-grid">

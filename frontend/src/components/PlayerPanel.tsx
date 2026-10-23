@@ -35,6 +35,7 @@ interface Props {
   authError: string | null // 로그인 실패 코드(백엔드가 ?auth_error=로 넘김)
   open: boolean // 접으면 제목과 지금 계정만 보인다
   onToggle: () => void
+  onAuthChange: () => void // 로그아웃·연결 해제: 화면에 남은 내 데이터(복기 노트 등)를 다시 읽게 한다
 }
 
 /** 로그인 실패 코드 → 현재 언어 문장 */
@@ -49,7 +50,7 @@ function authErrorKey(code: string): MessageKey {
 
 const Badge = PlatformBadge
 
-export function PlayerPanel({ current, onSelect, onClear, initialJobId, authError, open, onToggle }: Props) {
+export function PlayerPanel({ current, onSelect, onClear, initialJobId, authError, open, onToggle, onAuthChange }: Props) {
   const [me, setMe] = useState<Me | null>(null)
   const [providers, setProviders] = useState<AuthProvider[]>([])
   const [saved, setSaved] = useState<SavedPlayer[]>([])
@@ -130,12 +131,14 @@ export function PlayerPanel({ current, onSelect, onClear, initialJobId, authErro
   async function onLogout() {
     await logout()
     refresh()
+    onAuthChange()
   }
 
   async function onUnlink(platform: Platform) {
     if (!window.confirm(t('account.unlinkConfirm', { platform: platformLabel(platform) }))) return
     await unlinkAccount(platform)
     refresh()
+    onAuthChange()
   }
 
   const savedOf = (platform: Platform, username: string) =>

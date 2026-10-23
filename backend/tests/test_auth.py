@@ -159,10 +159,18 @@ def test_account_owned_by_other_user_conflicts(client, lichess):
 
 def test_unlink(client, lichess):
     finish_login(client, start_login(client, lichess))
-    assert client.delete("/api/me/accounts/lichess").json() == {"ok": True}
-    assert client.get("/api/me").json()["accounts"] == []
-    # 연결을 끊으면 그 계정의 대국은 더 볼 수 없다(데이터는 DB에 남는다).
-    assert client.get("/api/players/lichess/testuser").status_code == 403
-    assert client.get("/api/players").json() == []
-    client.post("/api/auth/logout")
+    user_id = client.get("/api/me").json()["user_id"]
+    start = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+    assert client.post("/api/reviews", json={"start_fen": start, "color": "white"}).status_code == 201
+
+    # 마지막 계정의 연결을 끊으면 로그아웃까지 한다(복기 노트가 계속 보이지 않게).
+    assert client.delete("/api/me/accounts/lichess").json() == {"ok": True, "signed_out": True}
+    assert client.get("/api/me").json() == {"user_id": None, "accounts": []}
+    assert client.get("/api/reviews").status_code == 401
+    assert client.get("/api/players/lichess/testuser").status_code == 401
     assert client.delete("/api/me/accounts/lichess").status_code == 401
+
+    # 같은 계정을 다시 연결하면 원래 사용자로 돌아와 노트가 그대로 보인다.
+    finish_login(client, start_login(client, lichess))
+    assert client.get("/api/me").json()["user_id"] == user_id
+    assert len(client.get("/api/reviews").json()) == 1

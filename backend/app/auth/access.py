@@ -1,7 +1,7 @@
 """플레이어 데이터 접근 제한: 로그인한 사용자는 자신이 연결한 플랫폼 계정의 대국만 다룰 수 있다."""
 
 from fastapi import Request
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from app.i18n import AppError
 from app.models.db import LinkedAccount
@@ -17,7 +17,9 @@ def linked_accounts(session: Session, user_id: int | None) -> set[tuple[str, str
     if user_id is None:
         return set()
     rows = session.exec(
-        select(LinkedAccount.platform, LinkedAccount.username).where(LinkedAccount.user_id == user_id)
+        select(LinkedAccount.platform, LinkedAccount.username).where(
+            LinkedAccount.user_id == user_id, col(LinkedAccount.unlinked_at).is_(None)
+        )
     ).all()
     return {(platform, username) for platform, username in rows}
 

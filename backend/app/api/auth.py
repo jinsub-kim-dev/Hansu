@@ -6,11 +6,12 @@ OAuth 콜백은 PUBLIC_BASE_URL(프론트엔드 주소) 아래 /api/auth/{platfo
 """
 
 import secrets
+from datetime import UTC, datetime
 from urllib.parse import urlencode
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Request, status
 from fastapi.responses import RedirectResponse
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 from app.api.players import get_job_manager
 from app.auth.accounts import AccountConflict, link_account, user_accounts
@@ -19,7 +20,7 @@ from app.config import settings
 from app.i18n import AppError, Lang, get_lang, platform_name
 from app.db import get_session
 from app.importers.jobs import ImportJobManager
-from app.models.db import LinkedAccount, User
+from app.models.db import User
 from app.models.schemas import AuthProviderOut, MeOut, Platform
 
 router = APIRouter(tags=["auth"])
@@ -108,13 +109,19 @@ def logout(request: Request):
 
 @router.delete("/me/accounts/{platform}")
 def unlink(platform: Platform, request: Request, session: Session = Depends(get_session)):
-    """계정 연결만 끊는다. 이미 가져온 대국 데이터는 남는다."""
+    """계정 연결을 끊는다. 가져온 대국과 복기 노트는 남고, 같은 계정을 다시 연결하면 돌아온다.
+
+    마지막 계정까지 끊으면 볼 수 있는 데이터가 없으므로 로그아웃한다.
+    """
     user_id = request.session.get("user_id")
     if user_id is None:
         raise AppError("login_required", status_code=401)
-    for acc in session.exec(
-        select(LinkedAccount).where(LinkedAccount.user_id == user_id, LinkedAccount.platform == platform)
-    ).all():
-        session.delete(acc)
+    for acc in user_accounts(session, user_id):
+        if acc.platform == platform:
+            acc.unlinked_at = datetime.now(UTC)
+            session.add(acc)
     session.commit()
-    return {"ok": True}
+    signed_out = not user_accounts(session, user_id)
+    if signed_out:
+        request.session.clear()
+    return {"ok": True, "signed_out": signed_out}

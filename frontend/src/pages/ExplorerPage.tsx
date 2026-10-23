@@ -100,6 +100,7 @@ export function ExplorerPage({ active, openRequest, reviewsVersion }: Props) {
   // 왼쪽의 "내 계정"·"포지션 입력"은 대국이나 노트를 열면 접어 수순과 복기 노트 자리를 만든다.
   const [accountOpen, setAccountOpen] = useState(true)
   const [inputOpen, setInputOpen] = useState(true)
+  const [authVersion, setAuthVersion] = useState(0) // 로그아웃·연결 해제 때 늘린다
   const [gameReviewKeys, setGameReviewKeys] = useState<Set<string>>(new Set()) // 이 대국에서 보관한 포지션
 
   const fen = fenAt(line, ply)
@@ -146,7 +147,7 @@ export function ExplorerPage({ active, openRequest, reviewsVersion }: Props) {
   // 복기 노트: 지금 포지션을 보관했는지. 로그인 상태나 다른 화면의 변경이 있으면 다시 찾는다.
   const { review, loginRequired, loading: reviewLoading, setReview } = useReview(
     fen,
-    `${player?.platform}/${player?.username}/${reviewsVersion}`,
+    `${player?.platform}/${player?.username}/${reviewsVersion}/${authVersion}`,
   )
 
   // 노트를 열면 그 포지션으로, 대국을 열면 대국 처음으로 이동하고 내 진영도 맞춘다.
@@ -290,6 +291,11 @@ export function ExplorerPage({ active, openRequest, reviewsVersion }: Props) {
           authError={authReturn.error}
           open={accountOpen}
           onToggle={() => setAccountOpen((o) => !o)}
+          onAuthChange={() => {
+            // 통계 계정을 고르지 않은 상태에서도 노트 패널·대국 카드에 남은 내 데이터를 지운다.
+            setGame(null)
+            setAuthVersion((v) => v + 1)
+          }}
         />
         <PositionInput onLoad={loadLine} open={inputOpen} onToggle={() => setInputOpen((o) => !o)} />
         {game && (

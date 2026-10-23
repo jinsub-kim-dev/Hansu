@@ -10,6 +10,7 @@ import {
   type Outcome,
   type SavedPlayer,
 } from '../api/client'
+import { ConnectAccountState, EmptyState, LoadingState } from '../components/EmptyState'
 import { PlatformBadge } from '../components/PlatformBadge'
 import { timeClassLabel } from '../components/TimeClassFilter'
 import { useI18n } from '../i18n'
@@ -17,6 +18,7 @@ import { useI18n } from '../i18n'
 interface Props {
   active: boolean
   onOpen: (game: GameSummary) => void
+  onGo: (view: 'explore') => void // 빈 화면에서 다른 탭으로 안내
 }
 
 const PAGE = 30
@@ -31,7 +33,7 @@ export function formatTimeControl(tc: string | null): string {
   return m[2] !== undefined ? `${min}+${m[2]}` : min
 }
 
-export function GamesPage({ active, onOpen }: Props) {
+export function GamesPage({ active, onOpen, onGo }: Props) {
   const { t, locale, formatNumber } = useI18n()
   const [accounts, setAccounts] = useState<SavedPlayer[] | null>(null)
   const [account, setAccount] = useState<SavedPlayer | null>(null)
@@ -116,13 +118,49 @@ export function GamesPage({ active, onOpen }: Props) {
     setTimeClasses((cur) => (cur.includes(tc) ? cur.filter((x) => x !== tc) : [...cur, tc]))
   }
 
+  const filtered = timeClasses.length > 0 || color !== null || outcome !== null
+  const noGamesYet = !!account && account.total_games === 0
   let body: React.ReactNode
-  if (loginRequired || (accounts && accounts.length === 0)) {
-    body = <p className="reviews-empty muted">{t('games.noAccount')}</p>
-  } else if (!accounts) {
-    body = <p className="reviews-empty muted">{t('reviews.loading')}</p>
+  if (error && !accounts) {
+    body = <p className="error">{error}</p>
+  } else if (loginRequired || (accounts && accounts.length === 0)) {
+    // 로그인하지 않았으면 연결 계정 목록이 비어 온다.
+    body = <ConnectAccountState description={t('empty.gamesConnect')} />
+  } else if (!accounts || (total === null && loading)) {
+    body = <LoadingState />
+  } else if (noGamesYet) {
+    body = (
+      <EmptyState
+        icon="import"
+        tone="teal"
+        title={t('empty.noGamesTitle')}
+        actions={<button onClick={() => onGo('explore')}>{t('empty.goImport')}</button>}
+      >
+        {t('empty.noGamesDesc')}
+      </EmptyState>
+    )
   } else if (total === 0 && !loading) {
-    body = <p className="reviews-empty muted">{t('games.empty')}</p>
+    body = (
+      <EmptyState
+        icon="search"
+        tone="muted"
+        title={t('games.empty')}
+        actions={
+          filtered && (
+            <button
+              className="secondary"
+              onClick={() => {
+                setTimeClasses([])
+                setColor(null)
+                setOutcome(null)
+              }}
+            >
+              {t('empty.resetFilters')}
+            </button>
+          )
+        }
+      />
+    )
   } else {
     body = (
       <>
@@ -223,7 +261,7 @@ export function GamesPage({ active, onOpen }: Props) {
           </div>
         )}
       </div>
-      {accounts && accounts.length > 0 && (
+      {accounts && accounts.length > 0 && !noGamesYet && (
         <div className="games-toolbar">
           <div className="seg">
             {([null, 'win', 'draw', 'loss'] as (Outcome | null)[]).map((o) => (

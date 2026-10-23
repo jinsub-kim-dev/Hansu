@@ -76,7 +76,7 @@ cd frontend && npm run typecheck
 - 체스닷컴: OAuth 승인 전이라 `ChessComOAuth.enabled`가 False다. 승인 후 `CHESSCOM_CLIENT_ID/SECRET`을 넣고 엔드포인트와 ID 토큰(JWT) 검증을 구현해 켠다. 그동안 체스닷컴 대국은 볼 수 없다.
 - 콜백 주소는 `PUBLIC_BASE_URL`(기본 `http://localhost:5173`) + `/api/auth/{platform}/callback`. 개발 중에는 Vite 프록시를 거쳐 쿠키가 프론트엔드 주소에 붙는다.
 - 세션 서명 키는 `SECRET_KEY`, 없으면 개발용으로 `backend/data/secret_key`에 만들어 쓴다.
-- **연결한 계정의 대국만 볼 수 있다.** 플레이어 데이터를 다루는 API(가져오기 시작·작업 조회, `/api/players`, 플레이어 요약, `/api/stats/position-moves`)는 `auth/access.py`의 `require_linked`로 로그인 사용자가 그 (플랫폼, 아이디)를 연결했는지 확인한다(로그인 전 401, 남의 계정 403 `account_not_linked`, 남의 가져오기 작업은 404). 플레이어 목록은 내 연결 계정만 돌려준다. 다른 플레이어의 아이디로 가져오거나 조회하는 화면은 없다. 연결을 끊어도 대국 데이터는 DB에 남지만 다시 연결하기 전에는 볼 수 없다. 포지션 엔진 평가(`/api/analysis/position`)와 오프닝 분류는 플레이어 데이터가 아니라 로그인 없이 쓸 수 있다. 테스트는 `current_user_id` 의존성을 바꿔 끼우고 `link_user` fixture로 계정을 연결한다.
+- **연결한 계정의 대국만 볼 수 있다.** 플레이어 데이터를 다루는 API(가져오기 시작·작업 조회, `/api/players`, 플레이어 요약, `/api/stats/position-moves`)는 `auth/access.py`의 `require_linked`로 로그인 사용자가 그 (플랫폼, 아이디)를 연결했는지 확인한다(로그인 전 401, 남의 계정 403 `account_not_linked`, 남의 가져오기 작업은 404). 플레이어 목록은 내 연결 계정만 돌려준다. 다른 플레이어의 아이디로 가져오거나 조회하는 화면은 없다. 연결을 끊으면(`DELETE /api/me/accounts/{platform}`) `LinkedAccount` 줄을 지우지 않고 `unlinked_at`만 채운다. 대국과 복기 노트는 남지만 다시 연결하기 전에는 볼 수 없고, 같은 계정을 다시 연결하면 원래 사용자로 돌아와 노트가 그대로 보인다. 마지막 계정까지 끊으면 세션을 지워 로그아웃한다(`signed_out: true`). 연결 계정을 읽는 곳(`access.linked_accounts`, `accounts.user_accounts`)은 해제한 계정을 뺀다. 포지션 엔진 평가(`/api/analysis/position`)와 오프닝 분류는 플레이어 데이터가 아니라 로그인 없이 쓸 수 있다. 테스트는 `current_user_id` 의존성을 바꿔 끼우고 `link_user` fixture로 계정을 연결한다.
 
 ### 다국어 (한국어 / 영어)
 

@@ -114,8 +114,8 @@ export function App() {
         <div hidden={view !== 'explore'}>
           <ExplorerPage active={view === 'explore'} openRequest={openRequest} reviewsVersion={reviewsVersion} />
         </div>
-        {view === 'games' && <GamesPage active onOpen={openGame} />}
-        {view === 'reviews' && <ReviewsPage active onOpen={openReview} />}
+        {view === 'games' && <GamesPage active onOpen={openGame} onGo={go} />}
+        {view === 'reviews' && <ReviewsPage active onOpen={openReview} onGo={go} />}
       </main>
     </>
   )

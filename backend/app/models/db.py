@@ -102,6 +102,8 @@ class LinkedAccount(SQLModel, table=True):
     username: str  # 소문자
     display_name: str | None = None
     linked_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    # 연결을 끊은 시각. 줄은 지우지 않고 남겨, 같은 계정을 다시 연결하면 원래 사용자(와 복기 노트)로 돌아온다.
+    unlinked_at: datetime | None = None
 
 
 class ReviewPosition(SQLModel, table=True):
