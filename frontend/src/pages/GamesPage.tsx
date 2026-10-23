@@ -235,10 +235,8 @@ export function GamesPage({ active, onOpen, onGo }: Props) {
   return (
     <div className="reviews-page games-page">
       <div className="reviews-head">
-        <h2>
-          {t('nav.games')}
-          {total !== null && <span className="muted"> {formatNumber(total)}</span>}
-        </h2>
+        {/* 화면 이름은 위쪽 탭이 보여 주므로 제목은 스크린 리더용으로만 둔다. */}
+        <h2 className="sr-only">{t('nav.games')}</h2>
         {/* 어느 플랫폼의 어느 계정 대국인지 항상 보여 주고, 계정이 여럿이면 여기서 고른다. */}
         {accounts && accounts.length > 0 && (
           <div className="account-switch" role="group" aria-label={t('games.account')}>
@@ -259,6 +257,10 @@ export function GamesPage({ active, onOpen, onGo }: Props) {
               )
             })}
           </div>
+        )}
+        {/* 필터로 거른 결과 수 (전체 수는 계정 칩에 있다) */}
+        {filtered && total !== null && (
+          <span className="games-result muted">{t('common.games', { n: formatNumber(total), count: total })}</span>
         )}
       </div>
       {accounts && accounts.length > 0 && !noGamesYet && (

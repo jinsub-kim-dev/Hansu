@@ -6,6 +6,7 @@
   --border: #dcdad3;
   --hairline: #e9e7e1;
   --surface-2: #f3f2ee;
+  --tabstrip: #e7e5df; /* 헤더 탭 띠 */
   --accent: #2f6fdb;
   --win: #5a9e4b;
   --draw: #a7a9ad;
@@ -34,6 +35,7 @@
     --border: #3a3d42;
     --hairline: #303236;
     --surface-2: #2d3034;
+    --tabstrip: #131416;
     --draw: #6f7277;
     --c-blue: #5b95f0;
     --c-teal: #2bb5a8;
@@ -63,7 +65,7 @@ main { padding: 16px; }
 /* 왼쪽 사이드(고정 폭) · 보드(화면 높이에 맞춘 정사각형) · 오른쪽 사이드(남은 폭 전부, 보드와 같은 높이) */
 .layout {
   --gap: 16px;
-  --left: clamp(300px, 21vw, 330px); /* 좁은 화면에서는 300px까지 줄여 보드 자리를 지킨다 */
+  --left: var(--layout-left);
   --right-min: 320px; /* 다음 수 통계 표가 잘리지 않는 최소 폭 */
   --evalbar: 28px;
   --board: min(
@@ -346,6 +348,8 @@ button.secondary { background: transparent; color: var(--text); border-color: va
    구역마다 카드 하나: 제목 띠(section-head) + 본문(section-body).
    글자 단계: 제목 0.85rem 굵게 / 본문 0.875rem / 항목 이름·보조 0.75rem 회색.
    컨트롤 높이: 기본 30px, 작은 것 26px. 모서리 7px. 항목 이름 열 56px로 왼쪽 정렬을 맞춘다. */
+/* 왼쪽 사이드 폭: 좁은 화면에서는 300px까지 줄여 보드 자리를 지킨다. 헤더 탭 위치도 이 값으로 맞춘다. */
+:root { --layout-left: clamp(300px, 21vw, 330px); }
 :root { --ctl-h: 30px; --ctl-h-sm: 26px; --ctl-r: 7px; --label-w: 56px; }
 
 .side-right.insight { gap: 12px; }
@@ -770,13 +774,15 @@ html[lang="en"] { --label-w: 84px; }
 
 /* ==== 화면 전환(헤더) ==== */
 /* 탭: 헤더 아래 경계선까지 내려와, 고른 탭은 강조색 밑줄로 표시한다 */
-.app-nav { display: flex; align-self: stretch; gap: 2px; margin: -14px 0 -15px 20px; }
+/* 열 너비를 1fr로 맞춰, 탭마다 가장 긴 탭 이름에 맞춘 같은 너비를 쓴다 */
+.app-nav { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; align-self: stretch; gap: 2px; margin: -14px 0 -15px 20px; }
 .app-nav button {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 0 16px;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 0 28px 0 16px;
   background: none;
   border: none;
   border-radius: 0;
@@ -785,22 +791,48 @@ html[lang="en"] { --label-w: 84px; }
   font-weight: 600;
 }
 .app-nav button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: 0.8; }
-.app-nav button::after {
+/* 크롬 브라우저 탭처럼: 고른 탭은 위쪽 모서리가 둥근 본문색 카드로 아래 본문과 이어지고,
+   아래 양쪽에 안으로 휜 모서리(::before, ::after)를 붙인다. 헤더는 본문보다 살짝 진한 띠로 둔다. */
+.app-header { background: var(--tabstrip); }
+.app-nav { --tab-r: 10px; }
+.app-nav button {
+  margin-top: 8px;
+  border-radius: var(--tab-r) var(--tab-r) 0 0;
+  transition: background-color 0.15s, color 0.15s;
+}
+.app-nav button:hover:not(.active) { color: var(--text); background: color-mix(in srgb, var(--text) 6%, transparent); }
+.app-nav button.active { z-index: 1; color: var(--text); background: var(--bg); }
+.app-nav button.active svg { opacity: 1; color: var(--accent); }
+.app-nav button.active::before,
+.app-nav button.active::after {
   content: '';
   position: absolute;
-  left: 10px;
-  right: 10px;
   bottom: 0;
-  height: 3px;
-  border-radius: 3px 3px 0 0;
-  background: transparent;
+  width: var(--tab-r);
+  height: var(--tab-r);
 }
-.app-nav button:hover:not(.active) { color: var(--text); }
-.app-nav button:hover:not(.active)::after { background: var(--border); }
-.app-nav button.active { color: var(--text); }
-.app-nav button.active svg { opacity: 1; color: var(--accent); }
-.app-nav button.active::after { background: var(--accent); }
+.app-nav button.active::before { right: 100%; background: radial-gradient(circle at 0 0, transparent calc(var(--tab-r) - 0.5px), var(--bg) var(--tab-r)); }
+.app-nav button.active::after { left: 100%; background: radial-gradient(circle at 100% 0, transparent calc(var(--tab-r) - 0.5px), var(--bg) var(--tab-r)); }
 .app-nav button:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; border-radius: 6px; }
+.app-nav button { white-space: nowrap; }
+/* 넓은 화면: 탭 영역이 탐색 화면의 체스보드 왼쪽 끝에서 시작한다.
+   main 여백 16 + 왼쪽 사이드 + 간격 16 + 평가 막대 28 + 보드 열 간격 20 (.layout·.board-col 값과 같이 바꾼다) */
+@media (min-width: 1101px) {
+  .app-header { position: relative; }
+  .app-nav { position: absolute; top: 0; bottom: -1px; left: calc(16px + var(--layout-left) + 16px + 28px + 20px); margin: 0; }
+}
+/* 좁은 화면: 로고·설정은 첫 줄, 탭은 둘째 줄에 헤더 폭을 셋으로 나눠 놓는다 */
+@media (max-width: 640px) {
+  .app-header { flex-wrap: wrap; padding: 12px 16px 0; row-gap: 6px; overflow-x: clip; }
+  .app-nav { order: 1; width: calc(100% + 32px); margin: 0 -16px; height: 44px; }
+  .app-nav button { justify-content: center; padding: 0 8px; } /* 좁은 화면은 칸이 작아 가운데 정렬 */
+  .header-controls { gap: 10px; }
+}
+/* 아주 좁은 화면: 탭 아이콘과 "언어" 글자를 숨겨(스크린 리더에는 남김) 한 줄에 맞춘다 */
+@media (max-width: 400px) {
+  .app-nav button svg { display: none; }
+  .lang-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
 
 /* ==== 복기 노트 패널(왼쪽) ==== */
 .review-panel { display: flex; flex-direction: column; gap: 12px; }
@@ -923,6 +955,7 @@ button.account-chip:hover:not(.active) { border-color: var(--accent); }
 span.account-chip.active { border-color: var(--border); background: var(--panel); }
 .games-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); }
 .games-toolbar .seg { background: var(--panel); }
+.games-result { font-size: 0.85rem; white-space: nowrap; }
 .games-toolbar .seg button { padding: 0 12px; }
 .tc-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-left: auto; }
 .tc-chips .chip {
@@ -1019,3 +1052,6 @@ span.account-chip.active { border-color: var(--border); background: var(--panel)
 .empty-actions:has(> button + button) { flex-direction: row; flex-wrap: wrap; justify-content: center; }
 .empty-actions .connect-btn { width: auto; padding: 9px 20px; }
 .list-empty .spinner.big { width: 28px; height: 28px; border-width: 3px; }
+
+/* 화면에는 숨기고 스크린 리더에만 읽히는 글 */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

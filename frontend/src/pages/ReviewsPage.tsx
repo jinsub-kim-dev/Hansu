@@ -198,10 +198,8 @@ export function ReviewsPage({ active, onOpen, onGo }: Props) {
   return (
     <div className="reviews-page">
       <div className="reviews-head">
-        <h2>
-          {t('review.title')}
-          {reviews && <span className="muted"> {reviews.length}</span>}
-        </h2>
+        {/* 화면 이름은 위쪽 탭이, 노트 수는 "전체" 필터가 보여 준다. */}
+        <h2 className="sr-only">{t('review.title')}</h2>
         {reviews && reviews.length > 0 && (
           <div className="reviews-filters">
             <div className="seg">

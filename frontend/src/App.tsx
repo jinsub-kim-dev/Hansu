@@ -99,7 +99,7 @@ export function App() {
             <span className="switch" aria-hidden />
           </button>
           <label className="sound-select">
-            {t('app.language')}
+            <span className="lang-label">{t('app.language')}</span>
             <select value={lang} onChange={(e) => setLang(e.target.value as Lang)}>
               {LANGS.map((l) => (
                 <option key={l.value} value={l.value}>
