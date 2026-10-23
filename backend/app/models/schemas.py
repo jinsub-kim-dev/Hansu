@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel
@@ -145,3 +145,95 @@ class LinkedAccountOut(BaseModel):
 class MeOut(BaseModel):
     user_id: int | None  # 로그인 전이면 None
     accounts: list[LinkedAccountOut]
+
+
+Classification = Literal["best", "good", "inaccuracy", "mistake", "blunder"]
+
+
+class ReviewNoteOut(BaseModel):
+    id: int
+    body: str
+    created_at: datetime
+
+
+class ReviewOut(BaseModel):
+    id: int
+    start_fen: str
+    moves: list[str]  # 시작 포지션부터 이 포지션까지 (UCI)
+    fen: str
+    color: Side
+    my_move: str | None
+    my_idea: str | None
+    best_move: str | None
+    classification: Classification | None
+    tags: list[str]
+    source_url: str | None
+    game_date: date | None
+    reviewed_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+    notes: list[ReviewNoteOut]  # 오래된 순
+
+
+class ReviewIn(BaseModel):
+    start_fen: str
+    moves: list[str] = []
+    color: Side
+    my_move: str | None = None
+    my_idea: str | None = None
+    best_move: str | None = None
+    classification: Classification | None = None
+    tags: list[str] = []
+    source_url: str | None = None
+    game_date: date | None = None
+    note: str | None = None  # 첫 메모
+
+
+class ReviewPatch(BaseModel):
+    """보낸 필드만 바꾼다(null을 보내면 비운다)."""
+
+    color: Side | None = None
+    my_move: str | None = None
+    my_idea: str | None = None
+    best_move: str | None = None
+    classification: Classification | None = None
+    tags: list[str] | None = None
+    source_url: str | None = None
+    game_date: date | None = None
+    reviewed: bool | None = None
+
+
+class ReviewNoteIn(BaseModel):
+    body: str
+
+
+class GameSummaryOut(BaseModel):
+    """대국 목록의 한 줄. 결과·레이팅은 내 기준."""
+
+    id: int
+    platform: Platform
+    url: str | None
+    color: Side  # 내가 잡은 색
+    outcome: Literal["win", "draw", "loss"]
+    result: str
+    me: str
+    my_rating: int | None
+    opponent: str
+    opponent_rating: int | None
+    time_class: str | None
+    time_control: str | None
+    rated: bool | None
+    end_time: datetime | None
+    plies: int
+    opening: OpeningOut | None
+
+
+class GameListOut(BaseModel):
+    total: int
+    games: list[GameSummaryOut]
+
+
+class GameDetailOut(GameSummaryOut):
+    start_fen: str
+    moves: list[str]  # UCI
+    pgn: str

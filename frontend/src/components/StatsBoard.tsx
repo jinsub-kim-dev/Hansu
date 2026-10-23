@@ -12,6 +12,7 @@ interface Props {
   arrowColorOf: (uci: string) => string
   highlighted: string | null
   bestMove: string | null
+  pinned?: { uci: string; color: string } | null // 복기 노트에 보관한 내 수
   onMove: (from: string, to: string) => boolean
 }
 
@@ -38,7 +39,7 @@ function checkSquareStyles(fen: string): Record<string, React.CSSProperties> {
   }
 }
 
-export function StatsBoard({ fen, orientation, group, arrowColorOf, highlighted, bestMove, onMove }: Props) {
+export function StatsBoard({ fen, orientation, group, arrowColorOf, highlighted, bestMove, pinned, onMove }: Props) {
   const squareStyles = useMemo(() => checkSquareStyles(fen), [fen])
   return (
     <div className="board-wrap">
@@ -60,6 +61,7 @@ export function StatsBoard({ fen, orientation, group, arrowColorOf, highlighted,
         colorOf={arrowColorOf}
         highlighted={highlighted}
         bestMove={bestMove}
+        pinned={pinned}
       />
       <BoardHelp />
     </div>

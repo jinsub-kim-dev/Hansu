@@ -1,5 +1,6 @@
 // 백엔드 API 클라이언트. 외부 플랫폼 API는 직접 호출하지 않는다.
 import { getLang, translate } from '../i18n'
+import type { Classification } from '../lib/eval'
 
 export type Platform = 'chesscom' | 'lichess'
 
@@ -82,7 +83,14 @@ export interface PositionMoveStats {
   opponent: MoveStatGroup
 }
 
-export class ApiError extends Error {}
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message)
+  }
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   // 백엔드가 오류 문구를 현재 언어로 만들도록 언어를 함께 보낸다.
@@ -97,7 +105,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     } catch {
       // 본문이 JSON이 아니면 기본 메시지
     }
-    throw new ApiError(message)
+    throw new ApiError(message, resp.status)
   }
   return resp.json() as Promise<T>
 }
@@ -205,4 +213,138 @@ export function logout(): Promise<{ ok: boolean }> {
 
 export function unlinkAccount(platform: Platform): Promise<{ ok: boolean }> {
   return request(`/me/accounts/${platform}`, { method: 'DELETE' })
+}
+
+// ---- 복기 노트 (로그인한 사용자 본인의 것) ----
+
+export interface ReviewNote {
+  id: number
+  body: string
+  created_at: string
+}
+
+export interface Review {
+  id: number
+  start_fen: string
+  moves: string[] // 시작 포지션부터 이 포지션까지 (UCI)
+  fen: string
+  color: Color // 내 진영
+  my_move: string | null // 내가 둔 수 (UCI)
+  my_idea: string | null // 엔진을 보기 전에 내가 생각한 더 좋은 수
+  best_move: string | null // 보관할 때의 엔진 최선 수
+  classification: Classification | null // 보관할 때의 내 수 판정
+  tags: string[]
+  source_url: string | null
+  game_date: string | null // YYYY-MM-DD
+  reviewed_at: string | null // 복기를 마쳤다고 표시한 시각
+  created_at: string
+  updated_at: string
+  notes: ReviewNote[] // 오래된 순
+}
+
+export interface ReviewInput {
+  start_fen: string
+  moves: string[]
+  color: Color
+  my_move?: string | null
+  my_idea?: string | null
+  best_move?: string | null
+  classification?: Classification | null
+  tags?: string[]
+  source_url?: string | null
+  game_date?: string | null
+  note?: string | null
+}
+
+export type ReviewPatch = Partial<Omit<ReviewInput, 'start_fen' | 'moves' | 'note'>> & { reviewed?: boolean }
+
+const json = (method: string, body: unknown): RequestInit => ({
+  method,
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(body),
+})
+
+export function listReviews(signal?: AbortSignal): Promise<Review[]> {
+  return request('/reviews', { signal })
+}
+
+/** 이 포지션을 보관했으면 그 노트, 아니면 null (수순이 달라도 같은 포지션이면 찾는다). */
+export function lookupReview(fen: string, signal?: AbortSignal): Promise<Review | null> {
+  return request(`/reviews/lookup?${new URLSearchParams({ fen })}`, { signal })
+}
+
+export function createReview(input: ReviewInput): Promise<Review> {
+  return request('/reviews', json('POST', input))
+}
+
+export function updateReview(id: number, patch: ReviewPatch): Promise<Review> {
+  return request(`/reviews/${id}`, json('PATCH', patch))
+}
+
+export function deleteReview(id: number): Promise<{ ok: boolean }> {
+  return request(`/reviews/${id}`, { method: 'DELETE' })
+}
+
+export function addReviewNote(id: number, body: string): Promise<Review> {
+  return request(`/reviews/${id}/notes`, json('POST', { body }))
+}
+
+export function deleteReviewNote(id: number, noteId: number): Promise<Review> {
+  return request(`/reviews/${id}/notes/${noteId}`, { method: 'DELETE' })
+}
+
+// ---- 대국 목록 / 대국 하나 (연결한 계정의 대국만) ----
+
+export type Outcome = 'win' | 'draw' | 'loss'
+
+export interface GameSummary {
+  id: number
+  platform: Platform
+  url: string | null
+  color: Color // 내가 잡은 색
+  outcome: Outcome // 내 기준
+  result: string
+  me: string
+  my_rating: number | null
+  opponent: string
+  opponent_rating: number | null
+  time_class: string | null
+  time_control: string | null
+  rated: boolean | null
+  end_time: string | null
+  plies: number
+  opening: Opening | null
+}
+
+export interface GameDetail extends GameSummary {
+  start_fen: string
+  moves: string[] // UCI
+  pgn: string
+}
+
+export interface GameQuery {
+  timeClasses?: string[]
+  color?: Color | null
+  outcome?: Outcome | null
+  offset?: number
+  limit?: number
+}
+
+export function listGames(
+  platform: Platform,
+  username: string,
+  q: GameQuery,
+  signal?: AbortSignal,
+): Promise<{ total: number; games: GameSummary[] }> {
+  const params = new URLSearchParams()
+  for (const tc of q.timeClasses ?? []) params.append('time_class', tc)
+  if (q.color) params.set('color', q.color)
+  if (q.outcome) params.set('outcome', q.outcome)
+  if (q.offset) params.set('offset', String(q.offset))
+  if (q.limit) params.set('limit', String(q.limit))
+  return request(`/players/${platform}/${enc(username)}/games?${params}`, { signal })
+}
+
+export function getGame(id: number): Promise<GameDetail> {
+  return request(`/games/${id}`)
 }

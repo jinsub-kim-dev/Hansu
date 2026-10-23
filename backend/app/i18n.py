@@ -55,6 +55,21 @@ MESSAGES: dict[str, dict[str, str]] = {
     },
     "job_not_found": {"ko": "작업을 찾을 수 없습니다.", "en": "Import job not found."},
     "player_not_imported": {"ko": "아직 가져오지 않은 플레이어입니다.", "en": "This player has not been imported yet."},
+    "game_not_found": {"ko": "대국을 찾을 수 없습니다.", "en": "Game not found."},
+    # 복기 노트
+    "review_not_found": {"ko": "복기 노트를 찾을 수 없습니다.", "en": "Review note not found."},
+    "review_limit": {
+        "ko": "복기 노트는 최대 {max}개까지 보관할 수 있습니다.",
+        "en": "You can keep at most {max} review notes.",
+    },
+    "too_many_tags": {"ko": "태그는 최대 {max}개까지 붙일 수 있습니다.", "en": "At most {max} tags are allowed."},
+    "tag_too_long": {"ko": "태그는 {max}자 이하로 적어 주세요.", "en": "Tags must be at most {max} characters."},
+    "invalid_url": {
+        "ko": "대국 주소는 http:// 또는 https://로 시작해야 합니다.",
+        "en": "The game link must start with http:// or https://.",
+    },
+    "note_empty": {"ko": "메모 내용을 입력하세요.", "en": "Please write a note."},
+    "note_too_long": {"ko": "메모는 {max}자 이하로 적어 주세요.", "en": "Notes must be at most {max} characters."},
     # 로그인
     "provider_not_ready": {
         "ko": "{platform} 계정 연결은 아직 준비 중입니다.",

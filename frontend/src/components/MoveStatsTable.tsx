@@ -11,6 +11,7 @@ interface Props {
   evalPending: boolean
   onHover: (uci: string | null) => void
   onPick: (uci: string) => void
+  onArchive?: (uci: string) => void // 이 수를 내 수로 복기 노트에 보관
 }
 
 const pct = (n: number, total: number) => (total ? Math.round((n / total) * 100) : 0)
@@ -33,7 +34,7 @@ function EvalCell({ ev, pending }: { ev: MoveEval | undefined; pending: boolean 
   )
 }
 
-export function MoveStatsTable({ group, colorOf, evals, bookMoves, evalPending, onHover, onPick }: Props) {
+export function MoveStatsTable({ group, colorOf, evals, bookMoves, evalPending, onHover, onPick, onArchive }: Props) {
   const { t, formatNumber } = useI18n()
   return (
     <table className="move-table">
@@ -42,7 +43,7 @@ export function MoveStatsTable({ group, colorOf, evals, bookMoves, evalPending, 
           <th>{t('table.move')}</th>
           <th>{t('table.eval')}</th>
           <th className="num">{t('table.games')}</th>
-          <th className="num">{t('table.share')}</th>
+          <th className="num share">{t('table.share')}</th>
           <th>{t('table.wdl')}</th>
         </tr>
       </thead>
@@ -62,12 +63,25 @@ export function MoveStatsTable({ group, colorOf, evals, bookMoves, evalPending, 
                   📖
                 </span>
               )}
+              {onArchive && (
+                <button
+                  className="row-archive"
+                  title={t('review.archiveMove', { san: m.san })}
+                  aria-label={t('review.archiveMove', { san: m.san })}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onArchive(m.uci)
+                  }}
+                >
+                  ☆
+                </button>
+              )}
             </td>
             <td>
               <EvalCell ev={evals[m.uci]} pending={evalPending} />
             </td>
             <td className="num">{formatNumber(m.games)}</td>
-            <td className="num">{pct(m.games, group.total)}%</td>
+            <td className="num share">{pct(m.games, group.total)}%</td>
             <td>
               <div className="wdl" title={t('table.wdlTitle', { w: m.wins, d: m.draws, l: m.losses })}>
                 <span className="w" style={{ flexGrow: m.wins }}>{pct(m.wins, m.games) >= 15 && `${pct(m.wins, m.games)}%`}</span>

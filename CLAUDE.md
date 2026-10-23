@@ -91,6 +91,21 @@ cd frontend && npm run typecheck
 
 수집할 때 각 대국의 모든 수를 `PositionMove`(수를 두기 전 포지션 키의 64비트 해시 `position_hash` + 둔 수 UCI + 둔 쪽)로 색인해 둔다. 가장 큰 테이블이라 FEN 문자열과 SAN은 저장하지 않고, SAN은 조회할 때 포지션 키(`board_from_key`)로 만든다. 옛 형식(FEN 문자열) 색인은 `init_db`가 지우고 대국 PGN으로 다시 만든다(`rebuild_position_index`). 포지션 키는 FEN에서 수 카운터를 뺀 앞 4필드(앙파상은 실제로 가능할 때만)라서 트랜스포지션은 같은 포지션으로 합쳐진다. `GET /api/stats/position-moves`는 포지션(FEN 또는 PGN)에서 플레이어 본인이 둔 수(`player`)와 상대들이 둔 수(`opponent`)를 승/무/패(플레이어 기준)와 함께 돌려준다. 필터: `time_class`(여러 번 가능), `color`, `since`/`until`(대국이 끝난 시각, ISO 8601·시간대 포함, until 미포함). 프론트엔드는 통계 패널 상단의 "내 진영"(기본 백)을 보드 아래쪽 진영이자 `color` 필터로 쓰고, 현재 차례가 내 진영이면 "내가 둔 수", 아니면 "상대들이 둔 수" 탭을 연다(내 진영 대국만 세므로 다른 탭은 항상 비어 있어 비활성화한다). 기간 필터(`PeriodFilter`)는 전체 기간 또는 현지 날짜 기준 시작일~종료일(양 끝 포함)을 고르고 이를 since/until로 바꿔 보낸다. 프론트엔드는 이를 빈도에 비례한 두께, 엔진 판정에 따른 색(최선·좋음 초록, 부정확·실수 노랑, 블런더 빨강, 평가 전 회색, `lib/eval.ts`의 `moveColor`)의 SVG 화살표로 보드 위에 그린다. 엔진 최선 수는 보라색 점선이다(`components/MoveArrows.tsx`, react-chessboard 기본 화살표는 화살표별 두께를 지원하지 않음).
 
+### 대국 목록
+
+`api/games.py`. DB 구조는 그대로 두고 `Game`과 포지션 색인으로 만든다. 연결한 계정의 대국만 열린다(목록은 `require_linked`, 대국 하나는 백·흑 중 하나가 내 연결 계정이어야 하고 아니면 404).
+- `GET /api/players/{platform}/{username}/games?time_class=&color=&outcome=win|draw|loss&offset=&limit=`(최대 50): 최근에 끝난 순, PGN은 빼고 내 기준 결과·레이팅·상대(이름은 PGN 헤더의 대소문자 그대로)·수 길이·오프닝(색인한 수순 앞 40수로 `OpeningBook` 분류)과 `total`.
+- `GET /api/games/{id}`: 위 요약 + 시작 FEN(PGN `FEN` 헤더, 없으면 초기 포지션) + 수순(UCI, `PositionMove`에서 읽어 PGN을 다시 풀지 않는다) + PGN.
+- 프론트엔드: 헤더 "대국" 화면(`GamesPage`, `#/games`, 계정·결과·진영·시간 규칙 필터, 30국씩 더 보기). 대국을 누르면 탐색 화면에서 그 대국을 처음부터 열고 내 진영과 통계 계정을 그 대국 것으로 맞춘다. 왼쪽 `GameInfo` 카드에 대국 정보를 보여주고, 보드에서 다른 수를 두면 "대국 수순으로 돌아가기"를 띄운다. 대국을 보는 중에 복기 노트를 보관하면 대국 주소·날짜가 채워지고, 대국 주소가 같은 노트의 포지션에서 둔 수는 수순 목록에 ★로 표시한다.
+- 대국 전체 평가 그래프·정확도는 수마다 평가를 저장하지 않으므로 아직 없다(브라우저에서 대국을 통째로 분석하는 방식이 다음 후보).
+
+### 복기 노트
+
+사용자가 실수한 포지션을 직접 보관하고 날짜별 메모로 복기 기록을 쌓는 기능(`api/reviews.py`, 로그인한 사용자 본인 것만, 남의 노트는 404). 엔진 판정을 수마다 저장하지 않는 대신 사용자가 고른 포지션만 저장한다.
+- `ReviewPosition`: 시작 FEN + 수순(UCI) + 그 포지션 FEN·포지션 키(사용자당 포지션 하나, 트랜스포지션도 같은 노트), 내 진영, 내가 둔 수, 내 생각(엔진 보기 전 내가 고른 수), 보관할 때의 최선 수·내 수 판정(목록 표시용 스냅숏), 태그(JSON), 대국 주소·날짜, 복기 완료 시각. `ReviewNote`: 덮어쓰지 않고 쌓는 메모.
+- API: `GET /api/reviews`, `GET /api/reviews/lookup?fen=`(없으면 null), `POST /api/reviews`(이미 있으면 그 노트를 200으로), `PATCH /api/reviews/{id}`(보낸 필드만, `reviewed`로 완료 표시), `DELETE`, `POST|DELETE /api/reviews/{id}/notes[/{note_id}]`.
+- 프론트엔드: 탐색 화면 왼쪽 `ReviewPanel`(보관 양식, 내 수 vs 최선 수 비교, 메모, 완료 표시)과 통계 표 "내가 둔 수" 줄의 ☆(그 수를 내 수로 보관). PGN을 따라왔으면 그 포지션의 다음 수를 내 수로 채운다. 보관한 내 수는 필터와 상관없이 흰 테두리 화살표로 그린다(`MoveArrows`의 `pinned`). 헤더의 "복기 노트" 화면(`ReviewsPage`, 주소 `#/reviews`)은 카드 목록(작은 보드, 상태·진영·태그 필터)이고 카드를 누르면 탐색 화면에서 그 포지션·진영으로 연다. 보관할 때 엔진 평가가 아직 없었으면 평가가 끝난 뒤 판정·최선 수를 채운다.
+
 ### 배포
 
 Vercel(프론트엔드, Root Directory `frontend`) + Render 무료 웹 서비스(백엔드 Docker, `backend/Dockerfile`에 Stockfish 포함, 15분 미사용 시 잠듦) + Supabase 무료 Postgres(500MB, Session pooler 주소, Data API 끔). `frontend/vercel.json`이 `/api/*`를 Render 백엔드로 넘겨, OAuth 콜백과 세션 쿠키가 프론트엔드 주소(`PUBLIC_BASE_URL`)에 붙는다. 상태 확인은 `/api/health`. 진행 중인 가져오기 작업 상태는 메모리에 있어 백엔드가 잠들면 사라진다(대국 데이터는 DB에 남음).

@@ -9,7 +9,7 @@ import httpx
 
 from app.analysis.engine import AnalysisService, StockfishAnalyzer
 from app.analysis.openings import get_book
-from app.api import analysis, auth, openings, players, stats
+from app.api import analysis, auth, games, openings, players, reviews, stats
 from app.auth.providers import ChessComOAuth, LichessOAuth, OAuthProvider
 from app.config import settings
 from app.db import engine, init_db
@@ -117,6 +117,8 @@ def create_app(
     app.include_router(stats.router, prefix="/api")
     app.include_router(analysis.router, prefix="/api")
     app.include_router(openings.router, prefix="/api")
+    app.include_router(reviews.router, prefix="/api")
+    app.include_router(games.router, prefix="/api")
     return app
 
 

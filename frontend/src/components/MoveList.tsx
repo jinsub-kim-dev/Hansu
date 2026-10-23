@@ -1,4 +1,5 @@
 import { Chess } from 'chess.js'
+import { useEffect, useRef } from 'react'
 import { useI18n, type MessageKey } from '../i18n'
 import type { Line } from '../lib/line'
 
@@ -6,6 +7,7 @@ interface Props {
   line: Line
   ply: number
   onSelect: (ply: number) => void
+  marked?: Set<number> // 복기 노트에 보관한 포지션에서 둔 수 (line.moves 인덱스)
 }
 
 // 이동 버튼: 처음 / 이전 / 다음 / 끝 (키보드 Home ← → End와 같다)
@@ -23,8 +25,19 @@ const NAV: {
 ]
 
 /** 현재 라인의 수순. 수를 클릭하면 그 포지션으로 이동한다. */
-export function MoveList({ line, ply, onSelect }: Props) {
+export function MoveList({ line, ply, onSelect, marked }: Props) {
   const { t } = useI18n()
+  const listRef = useRef<HTMLOListElement>(null)
+  // 지금 수가 목록 밖에 있으면 목록 안에서만 스크롤한다(페이지는 움직이지 않는다).
+  useEffect(() => {
+    const list = listRef.current
+    const cur = list?.querySelector<HTMLElement>('.move.current')
+    if (!list || !cur) return
+    const top = cur.offsetTop
+    if (top < list.scrollTop) list.scrollTop = top - 8
+    else if (top + cur.offsetHeight > list.scrollTop + list.clientHeight)
+      list.scrollTop = top + cur.offsetHeight - list.clientHeight + 8
+  }, [ply, line])
   // 시작 포지션이 흑 차례면 첫 수는 "1..." 형식이 된다.
   const start = new Chess(line.startFen)
   const blackFirst = start.turn() === 'b'
@@ -60,7 +73,7 @@ export function MoveList({ line, ply, onSelect }: Props) {
       {line.moves.length === 0 ? (
         <p className="muted small">{t('moves.empty')}</p>
       ) : (
-        <ol className="moves">
+        <ol className="moves" ref={listRef}>
           {rows.map((row) => (
             <li key={row.number}>
               <span className="num">{row.number}.</span>
@@ -70,8 +83,9 @@ export function MoveList({ line, ply, onSelect }: Props) {
                 ) : (
                   <button
                     key={col}
-                    className={i + 1 === ply ? 'move current' : 'move'}
+                    className={`move ${i + 1 === ply ? 'current' : ''} ${marked?.has(i) ? 'marked' : ''}`}
                     onClick={() => onSelect(i + 1)}
+                    title={marked?.has(i) ? t('moves.marked') : undefined}
                   >
                     {line.moves[i].san}
                   </button>

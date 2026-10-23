@@ -32,6 +32,8 @@ interface Props {
   onClear: () => void // 로그아웃·연결 해제로 고른 계정을 더는 볼 수 없을 때
   initialJobId: string | null // OAuth로 돌아온 직후 시작된 가져오기 작업
   authError: string | null // 로그인 실패 코드(백엔드가 ?auth_error=로 넘김)
+  open: boolean // 접으면 제목과 지금 계정만 보인다
+  onToggle: () => void
 }
 
 /** 로그인 실패 코드 → 현재 언어 문장 */
@@ -52,7 +54,7 @@ function Badge({ platform }: { platform: Platform }) {
   )
 }
 
-export function PlayerPanel({ current, onSelect, onClear, initialJobId, authError }: Props) {
+export function PlayerPanel({ current, onSelect, onClear, initialJobId, authError, open, onToggle }: Props) {
   const [me, setMe] = useState<Me | null>(null)
   const [providers, setProviders] = useState<AuthProvider[]>([])
   const [saved, setSaved] = useState<SavedPlayer[]>([])
@@ -148,88 +150,109 @@ export function PlayerPanel({ current, onSelect, onClear, initialJobId, authErro
   const p = job?.progress
 
   return (
-    <section className="panel player-panel sec-blue">
+    <section className={`panel player-panel sec-blue ${open ? '' : 'collapsed'}`}>
       <div className="panel-head">
-        <h2>{t('account.title')}</h2>
-        {me?.user_id != null && (
+        <button className="panel-toggle" onClick={onToggle} aria-expanded={open}>
+          <h2>{t('account.title')}</h2>
+          {!open && (
+            <span className="panel-summary">
+              {current ? (
+                <>
+                  <Badge platform={current.platform} />
+                  {current.display_name ?? current.username}
+                </>
+              ) : (
+                t('account.notSelected')
+              )}
+            </span>
+          )}
+          <span className="chevron" aria-hidden>
+            {open ? '▾' : '▸'}
+          </span>
+        </button>
+        {open && me?.user_id != null && (
           <button className="link-btn" onClick={onLogout}>
             {t('account.logout')}
           </button>
         )}
       </div>
+      {open && (
+        <>
 
-      <ul className="accounts">
-        {PLATFORMS.map(({ value: platform }) => {
-          const label = platformLabel(platform)
-          const account = me?.accounts.find((a) => a.platform === platform)
-          const provider = providers.find((x) => x.platform === platform)
-          if (account) {
-            const s = savedOf(platform, account.username)
-            const hasGames = (s?.total_games ?? 0) > 0
-            return (
-              <li key={platform} className={isCurrent(platform, account.username) ? 'account active' : 'account'}>
-                <button className="pick" onClick={() => select(platform, account.username)}>
-                  <span className="name">
-                    <Badge platform={platform} />
-                    {account.display_name ?? account.username}
-                  </span>
-                  <span className="muted small">
-                    {hasGames
-                      ? `${t('common.games', { n: formatNumber(s!.total_games), count: s!.total_games })} · ${t('common.lastGame', { date: formatDate(s!.last_game_at) })}`
-                      : t('account.noGames')}
-                  </span>
-                </button>
-                <div className="account-actions">
+          <ul className="accounts">
+            {PLATFORMS.map(({ value: platform }) => {
+              const label = platformLabel(platform)
+              const account = me?.accounts.find((a) => a.platform === platform)
+              const provider = providers.find((x) => x.platform === platform)
+              if (account) {
+                const s = savedOf(platform, account.username)
+                const hasGames = (s?.total_games ?? 0) > 0
+                return (
+                  <li key={platform} className={isCurrent(platform, account.username) ? 'account active' : 'account'}>
+                    <button className="pick" onClick={() => select(platform, account.username)}>
+                      <span className="name">
+                        <Badge platform={platform} />
+                        {account.display_name ?? account.username}
+                      </span>
+                      <span className="muted small">
+                        {hasGames
+                          ? `${t('common.games', { n: formatNumber(s!.total_games), count: s!.total_games })} · ${t('common.lastGame', { date: formatDate(s!.last_game_at) })}`
+                          : t('account.noGames')}
+                      </span>
+                    </button>
+                    <div className="account-actions">
+                      <button
+                        className="secondary"
+                        onClick={() => runImport(platform, account.username)}
+                        disabled={busy}
+                        title={hasGames ? t('account.updateTitle') : t('account.importTitle', { years: historyYears })}
+                      >
+                        {hasGames ? t('account.update') : t('account.import')}
+                      </button>
+                      <button className="link-btn" onClick={() => onUnlink(platform)}>
+                        {t('account.unlink')}
+                      </button>
+                    </div>
+                  </li>
+                )
+              }
+              return (
+                <li key={platform} className="account empty">
                   <button
-                    className="secondary"
-                    onClick={() => runImport(platform, account.username)}
-                    disabled={busy}
-                    title={hasGames ? t('account.updateTitle') : t('account.importTitle', { years: historyYears })}
+                    className="connect-btn"
+                    onClick={() => startLogin(platform)}
+                    disabled={!provider?.enabled || busy}
                   >
-                    {hasGames ? t('account.update') : t('account.import')}
+                    <Badge platform={platform} />
+                    {t('account.connect', { platform: label })}
                   </button>
-                  <button className="link-btn" onClick={() => onUnlink(platform)}>
-                    {t('account.unlink')}
-                  </button>
-                </div>
-              </li>
-            )
-          }
-          return (
-            <li key={platform} className="account empty">
-              <button
-                className="connect-btn"
-                onClick={() => startLogin(platform)}
-                disabled={!provider?.enabled || busy}
-              >
-                <Badge platform={platform} />
-                {t('account.connect', { platform: label })}
-              </button>
-              {provider && !provider.enabled && (
-                <p className="muted small">{t('account.pending')}</p>
-              )}
-            </li>
-          )
-        })}
-      </ul>
-      {me?.user_id == null && (
-        <p className="muted small import-hint">{t('account.hint', { years: historyYears })}</p>
-      )}
+                  {provider && !provider.enabled && (
+                    <p className="muted small">{t('account.pending')}</p>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+          {me?.user_id == null && (
+            <p className="muted small import-hint">{t('account.hint', { years: historyYears })}</p>
+          )}
 
-      {p && busy && job && <ImportProgressView job={job} progress={p} historyYears={historyYears} />}
-      {job?.status === 'done' && p && (
-        <p className="muted small import-hint">
-          {platformLabel(job.platform)} {job.username}:{' '}
-          {p.mode === 'initial'
-            ? t('account.doneInitial', { years: historyYears, n: formatNumber(p.games_added), count: p.games_added })
-            : p.games_added > 0
-              ? t('account.doneAdded', { n: formatNumber(p.games_added), count: p.games_added })
-              : t('account.doneNone')}
-        </p>
-      )}
-      {authCode && <p className="error">{t(authErrorKey(authCode))}</p>}
-      {error && <p className="error">{error}</p>}
+          {p && busy && job && <ImportProgressView job={job} progress={p} historyYears={historyYears} />}
+          {job?.status === 'done' && p && (
+            <p className="muted small import-hint">
+              {platformLabel(job.platform)} {job.username}:{' '}
+              {p.mode === 'initial'
+                ? t('account.doneInitial', { years: historyYears, n: formatNumber(p.games_added), count: p.games_added })
+                : p.games_added > 0
+                  ? t('account.doneAdded', { n: formatNumber(p.games_added), count: p.games_added })
+                  : t('account.doneNone')}
+            </p>
+          )}
+          {authCode && <p className="error">{t(authErrorKey(authCode))}</p>}
+          {error && <p className="error">{error}</p>}
 
+        </>
+      )}
     </section>
   )
 }

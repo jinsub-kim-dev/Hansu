@@ -32,6 +32,7 @@ interface Props {
   bookMoves: Set<string>
   onHover: (uci: string | null) => void
   onPick: (uci: string) => void
+  onArchive?: (uci: string) => void // 내가 둔 수를 복기 노트에 보관 (로그인했을 때만)
 }
 
 // 두 쪽 모두 같은 킹 모양을 쓰고 색으로만 구분한다. 글꼴마다 모양이 달라지는 ♔/♚ 문자 대신 SVG로 그린다.
@@ -240,6 +241,7 @@ export function StatsPanel(props: Props) {
               evalPending={props.evalPending}
               onHover={props.onHover}
               onPick={props.onPick}
+              onArchive={props.side === 'player' ? props.onArchive : undefined}
             />
           </div>
         )}

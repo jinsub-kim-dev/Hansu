@@ -35,6 +35,17 @@ export function playMove(
   }
 }
 
+/** 시작 포지션과 UCI 수순으로 라인을 만든다. 둘 수 없는 수가 나오면 거기서 멈춘다. */
+export function lineFromUcis(startFen: string, ucis: string[]): Line {
+  let line: Line = { startFen, moves: [] }
+  for (const uci of ucis) {
+    const next = playMove(line, line.moves.length, uciToMove(uci))
+    if (!next) break
+    line = next
+  }
+  return line
+}
+
 export function uciToMove(uci: string) {
   return { from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci.slice(4) || undefined }
 }

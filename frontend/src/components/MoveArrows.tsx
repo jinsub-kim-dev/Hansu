@@ -43,10 +43,12 @@ interface Props {
   colorOf: (uci: string) => string // 수마다 화살표 색
   highlighted: string | null
   bestMove?: string | null // 엔진 최선 수 (uci)
+  pinned?: { uci: string; color: string } | null // 복기 노트에 보관한 내 수: 통계·필터와 상관없이 흰 테두리로 그린다
+  bold?: boolean // 작은 보드용: 최선 수·보관한 수 화살표를 굵게
 }
 
-export function MoveArrows({ moves, total, orientation, colorOf, highlighted, bestMove }: Props) {
-  if (total === 0 && !bestMove) return null
+export function MoveArrows({ moves, total, orientation, colorOf, highlighted, bestMove, pinned, bold }: Props) {
+  if (total === 0 && !bestMove && !pinned) return null
   // 빈도 낮은 수를 먼저 그려 많이 둔 수가 위에 오게 한다. 강조된 수는 맨 위.
   const shown = (total ? moves : [])
     .slice(0, MAX_ARROWS)
@@ -66,7 +68,10 @@ export function MoveArrows({ moves, total, orientation, colorOf, highlighted, be
       opacity: isHi ? 0.95 : highlighted ? 0.25 : 0.35 + 0.5 * share,
     }
   })
-  const best = bestMove ? { width: 6, ...geometry(bestMove, orientation, 6) } : null
+  const bestW = bold ? 14 : 6
+  const pinW = bold ? 22 : 12
+  const best = bestMove ? { width: bestW, ...geometry(bestMove, orientation, bestW) } : null
+  const pin = pinned ? { color: pinned.color, width: pinW, ...geometry(pinned.uci, orientation, pinW) } : null
 
   return (
     <svg className="move-arrows" viewBox={`0 0 ${8 * SQ} ${8 * SQ}`} aria-hidden>
@@ -86,7 +91,7 @@ export function MoveArrows({ moves, total, orientation, colorOf, highlighted, be
         <g opacity={0.95}>
           <line
             x1={best.start[0]} y1={best.start[1]} x2={best.base[0]} y2={best.base[1]}
-            stroke={BEST_COLOR} strokeWidth={best.width} strokeLinecap="round" strokeDasharray="14 10"
+            stroke={BEST_COLOR} strokeWidth={best.width} strokeLinecap="round" strokeDasharray={bold ? "26 24" : "14 10"}
           />
           <polygon
             points={`${best.tip[0]},${best.tip[1]} ${best.base[0] + best.wing[0]},${best.base[1] + best.wing[1]} ${best.base[0] - best.wing[0]},${best.base[1] - best.wing[1]}`}
@@ -105,6 +110,23 @@ export function MoveArrows({ moves, total, orientation, colorOf, highlighted, be
             </text>
           </g>
         ))}
+      {/* 보관한 내 수는 다른 화살표의 비율 표시에 가리지 않게 맨 위에 그린다. */}
+      {pin && (
+        <g opacity={0.95}>
+          <line
+            x1={pin.start[0]} y1={pin.start[1]} x2={pin.base[0]} y2={pin.base[1]}
+            stroke="#fff" strokeWidth={pin.width + 6} strokeLinecap="round"
+          />
+          <polygon
+            points={`${pin.tip[0]},${pin.tip[1]} ${pin.base[0] + pin.wing[0]},${pin.base[1] + pin.wing[1]} ${pin.base[0] - pin.wing[0]},${pin.base[1] - pin.wing[1]}`}
+            fill={pin.color} stroke="#fff" strokeWidth={4} strokeLinejoin="round"
+          />
+          <line
+            x1={pin.start[0]} y1={pin.start[1]} x2={pin.base[0]} y2={pin.base[1]}
+            stroke={pin.color} strokeWidth={pin.width} strokeLinecap="round"
+          />
+        </g>
+      )}
     </svg>
   )
 }
