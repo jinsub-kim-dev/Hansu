@@ -5,12 +5,12 @@ import {
   listGames,
   listPlayers,
   platformLabel,
-  PLATFORMS,
   type Color,
   type GameSummary,
   type Outcome,
   type SavedPlayer,
 } from '../api/client'
+import { PlatformBadge } from '../components/PlatformBadge'
 import { timeClassLabel } from '../components/TimeClassFilter'
 import { useI18n } from '../i18n'
 
@@ -201,23 +201,30 @@ export function GamesPage({ active, onOpen }: Props) {
           {t('nav.games')}
           {total !== null && <span className="muted"> {formatNumber(total)}</span>}
         </h2>
+        {/* 어느 플랫폼의 어느 계정 대국인지 항상 보여 주고, 계정이 여럿이면 여기서 고른다. */}
+        {accounts && accounts.length > 0 && (
+          <div className="account-switch" role="group" aria-label={t('games.account')}>
+            {accounts.map((a) => {
+              const active = account?.platform === a.platform && account.username === a.username
+              const Tag = accounts.length > 1 ? 'button' : 'span'
+              return (
+                <Tag
+                  key={`${a.platform}/${a.username}`}
+                  className={`account-chip ${active ? 'active' : ''}`}
+                  {...(accounts.length > 1 ? { onClick: () => setAccount(a), 'aria-pressed': active } : {})}
+                >
+                  <PlatformBadge platform={a.platform} />
+                  <span className="platform-name">{platformLabel(a.platform)}</span>
+                  <b>{a.display_name ?? a.username}</b>
+                  <span className="games-count">{t('common.games', { n: formatNumber(a.total_games), count: a.total_games })}</span>
+                </Tag>
+              )
+            })}
+          </div>
+        )}
       </div>
       {accounts && accounts.length > 0 && (
         <div className="games-toolbar">
-          {accounts.length > 1 && (
-            <div className="seg">
-              {accounts.map((a) => (
-                <button
-                  key={`${a.platform}/${a.username}`}
-                  className={account === a ? 'active' : ''}
-                  onClick={() => setAccount(a)}
-                >
-                  <span className={`platform-badge ${a.platform}`}>{PLATFORMS.find((p) => p.value === a.platform)?.short}</span>
-                  {a.display_name ?? a.username}
-                </button>
-              ))}
-            </div>
-          )}
           <div className="seg">
             {([null, 'win', 'draw', 'loss'] as (Outcome | null)[]).map((o) => (
               <button key={o ?? 'all'} className={outcome === o ? 'active' : ''} onClick={() => setOutcome(o)}>

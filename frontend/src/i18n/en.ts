@@ -188,6 +188,7 @@ export const en: Record<MessageKey, Msg> = {
   'games.outcome.draw': 'Draw',
   'games.outcome.loss': 'Loss',
   'games.thisGame': 'Game',
+  'games.account': 'Account to show games for',
   'games.playedWhite': 'You played white',
   'games.playedBlack': 'You played black',
   'games.noOpening': 'Unknown opening',

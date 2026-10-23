@@ -23,6 +23,7 @@ import {
   type SavedPlayer,
 } from '../api/client'
 import { useI18n, type MessageKey } from '../i18n'
+import { PlatformBadge } from './PlatformBadge'
 
 const POLL_MS = 1000
 
@@ -46,13 +47,7 @@ function authErrorKey(code: string): MessageKey {
   return (known.includes(code) ? key : 'authError.unknown') as MessageKey
 }
 
-function Badge({ platform }: { platform: Platform }) {
-  return (
-    <span className={`platform-badge ${platform}`} title={platformLabel(platform)}>
-      {PLATFORMS.find((p) => p.value === platform)?.short}
-    </span>
-  )
-}
+const Badge = PlatformBadge
 
 export function PlayerPanel({ current, onSelect, onClear, initialJobId, authError, open, onToggle }: Props) {
   const [me, setMe] = useState<Me | null>(null)

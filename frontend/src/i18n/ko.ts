@@ -184,6 +184,7 @@ export const ko = {
   'games.outcome.draw': '무',
   'games.outcome.loss': '패',
   'games.thisGame': '대국',
+  'games.account': '대국을 볼 계정',
   'games.playedWhite': '백으로 둔 대국',
   'games.playedBlack': '흑으로 둔 대국',
   'games.noOpening': '오프닝 정보 없음',

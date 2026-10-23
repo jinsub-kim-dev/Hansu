@@ -141,6 +141,7 @@ cd frontend && npm run typecheck
 - 오프닝 이름: [lichess-org/chess-openings](https://github.com/lichess-org/chess-openings) (CC0) — `backend/app/data/openings/`
 - 착수음: [PyChess](https://github.com/pychess/pychess) (GPL-3.0-or-later) — `frontend/public/sounds/wood/LICENSE.txt`
 - 기물 그림·아이콘: [react-chessboard](https://github.com/Clariity/react-chessboard)에 포함된 기물 SVG
+- 리체스 로고: [lichess-org/lila](https://github.com/lichess-org/lila/tree/master/public/logo)의 `lichess-favicon.svg`(sadsnake1) 원본 — `frontend/public/brands/`
 - 스크린샷의 대국: 체스닷컴 공개 계정 `erik`의 공개 대국
 
 ## 라이선스
@@ -149,4 +150,6 @@ Copyright (C) 2026 jinsub-kim-dev
 
 이 프로그램은 [GNU Affero General Public License v3.0](LICENSE) 이상(AGPL-3.0-or-later)으로 배포합니다. 수정한 버전을 배포하거나 네트워크 서비스로 제공할 때는 같은 라이선스로 소스 코드를 공개해야 합니다.
 
-함께 들어 있는 제3자 자료는 각자의 라이선스를 따릅니다: Stockfish.js(GPL-3.0, `frontend/public/engine/COPYING.txt`), 착수음(GPL-3.0-or-later, `frontend/public/sounds/wood/LICENSE.txt`), 오프닝 목록(CC0, `backend/app/data/openings/SOURCE.txt`).
+함께 들어 있는 제3자 자료는 각자의 라이선스를 따릅니다: Stockfish.js(GPL-3.0, `frontend/public/engine/COPYING.txt`), 착수음(GPL-3.0-or-later, `frontend/public/sounds/wood/LICENSE.txt`), 오프닝 목록(CC0, `backend/app/data/openings/SOURCE.txt`). 리체스 로고는 lila의 라이선스 예외 항목으로 "lichess.org를 가리킬 때만" 쓸 수 있어 AGPL 대상이 아니며, 리체스 계정·연결 버튼 표시에만 씁니다(`frontend/public/brands/README.txt`).
+
+Chess.com과 Lichess의 이름과 로고는 각 소유자의 상표입니다. 묘수는 두 서비스와 제휴하거나 보증받은 서비스가 아닙니다.

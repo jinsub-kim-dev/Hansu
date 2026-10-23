@@ -324,7 +324,7 @@ button.secondary { background: transparent; color: var(--text); border-color: va
 }
 .platform-toggle .platform-badge { margin-right: 0; }
 .platform-badge.chesscom { background: #6a9f3a; }
-.platform-badge.lichess { background: #5b5b5b; }
+.platform-badge.lichess { background: none; border-radius: 0; object-fit: contain; } /* 공식 로고(테마에 따라 검정/흰색) */
 
 /* 내 계정 */
 .panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
@@ -902,6 +902,25 @@ html[lang="en"] { --label-w: 84px; }
 
 /* ==== 대국 목록 ==== */
 .games-page { max-width: 880px; gap: 14px; }
+.account-switch { display: flex; flex-wrap: wrap; gap: 6px; }
+.account-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+.account-chip .platform-name { color: var(--muted); }
+.account-chip .games-count { color: var(--muted); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+button.account-chip { cursor: pointer; }
+button.account-chip:hover:not(.active) { border-color: var(--accent); }
+.account-chip.active { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--panel)); }
+span.account-chip.active { border-color: var(--border); background: var(--panel); }
 .games-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); }
 .games-toolbar .seg { background: var(--panel); }
 .games-toolbar .seg button { padding: 0 12px; }
