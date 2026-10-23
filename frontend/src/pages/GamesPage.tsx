@@ -61,9 +61,11 @@ export function GamesPage({ active, onOpen, onGo }: Props) {
       })
   }, [active])
 
-  // 계정·필터가 바뀌면 첫 페이지부터 다시 받는다.
+  // 계정·필터가 바뀌면 첫 페이지부터 다시 받는다. 탭을 다시 열 때는 받아 둔 목록을 그대로 쓰고,
+  // 그사이 그 계정의 대국 수가 바뀌었을 때(가져오기·업데이트)만 다시 받는다.
+  const accountKey = account ? `${account.platform}/${account.username}/${account.total_games}` : null
   useEffect(() => {
-    if (!active || !account) return
+    if (!account) return
     const ctrl = new AbortController()
     setLoading(true)
     setError(null)
@@ -79,7 +81,7 @@ export function GamesPage({ active, onOpen, onGo }: Props) {
         if (!ctrl.signal.aborted) setLoading(false)
       })
     return () => ctrl.abort()
-  }, [active, account, timeClasses, color, outcome])
+  }, [accountKey, timeClasses, color, outcome])
 
   async function more() {
     if (!account) return

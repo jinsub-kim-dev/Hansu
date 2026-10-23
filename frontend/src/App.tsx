@@ -25,6 +25,11 @@ export function App() {
   const [view, setView] = useState<View>(viewFromHash)
   const [openRequest, setOpenRequest] = useState<OpenRequest | null>(null)
   const [reviewsVersion, setReviewsVersion] = useState(0)
+  // 한 번 연 화면은 숨겨 두기만 하고 계속 들고 있어, 탭을 오갈 때 다시 로딩하지 않는다.
+  const [opened, setOpened] = useState<Set<View>>(() => new Set([view]))
+  useEffect(() => {
+    setOpened((cur) => (cur.has(view) ? cur : new Set(cur).add(view)))
+  }, [view])
 
   useEffect(() => {
     const onHash = () => setView(viewFromHash())
@@ -114,8 +119,16 @@ export function App() {
         <div hidden={view !== 'explore'}>
           <ExplorerPage active={view === 'explore'} openRequest={openRequest} reviewsVersion={reviewsVersion} />
         </div>
-        {view === 'games' && <GamesPage active onOpen={openGame} onGo={go} />}
-        {view === 'reviews' && <ReviewsPage active onOpen={openReview} onGo={go} />}
+        {opened.has('games') && (
+          <div hidden={view !== 'games'}>
+            <GamesPage active={view === 'games'} onOpen={openGame} onGo={go} />
+          </div>
+        )}
+        {opened.has('reviews') && (
+          <div hidden={view !== 'reviews'}>
+            <ReviewsPage active={view === 'reviews'} onOpen={openReview} onGo={go} />
+          </div>
+        )}
       </main>
     </>
   )

@@ -59,7 +59,7 @@ export function ReviewsPage({ active, onOpen, onGo }: Props) {
   const [color, setColor] = useState<Color | 'all'>('all')
   const [tag, setTag] = useState('')
 
-  // 화면을 열 때마다 새로 읽는다(탐색 화면에서 보관·수정했을 수 있다).
+  // 화면을 열 때마다 새로 읽는다(탐색 화면에서 보관·수정했을 수 있다). 받아 둔 목록은 그동안 그대로 보여 준다.
   useEffect(() => {
     if (!active) return
     const ctrl = new AbortController()
